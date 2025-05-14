@@ -1,12 +1,10 @@
 ﻿{
   "manifest_version": 3,
   "name": "Save It All Extension",
-  "version": 1.0,
-  "permissions": ["scripting", "activeTab"],
+  "version": "1.0",
+  "permissions": ["scripting", "activeTab", "tabs"],
   "action": {
     "default_popup": "popup.html"
   },
-  "background": {
-    "service_worker": "background.js"
-  }
+  "host_permissions": ["http://localhost:5000/"]
 }
