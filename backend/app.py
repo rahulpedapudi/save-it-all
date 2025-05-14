@@ -1,15 +1,22 @@
-﻿from flask import Flask, request, jsonify
+﻿from flask import Flask
+from config import Config
+from flask_pymongo import PyMongo
 from flask_cors import CORS
+from api.routes import api_bp
 
 app = Flask(__name__)
+
+# Mongo Config
+app.config.from_object(Config)
+mongo = PyMongo(app)
+
+app.mongo = mongo
+
+# Enabling CORS
 CORS(app)
 
-
-@app.route("/api/save", methods=["POST"])
-def save_data():
-    data = request.json
-    print("Data Received", data)
-    return jsonify({"status": "success", "received": data}), 200
+# api Blueprint
+app.register_blueprint(api_bp, url_prefix='/api')
 
 
 if __name__ == '__main__':
