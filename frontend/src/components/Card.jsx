@@ -3,8 +3,12 @@
 function Card(props) {
   const navigate = useNavigate();
 
-  const handleClick = () => {
+  const handleOpen = () => {
     navigate(`/detail/${props._id}`);
+  };
+
+  const handleDeleteClick = () => {
+    props.handleDelete(props._id);
   };
 
   return (
@@ -14,11 +18,15 @@ function Card(props) {
           {props.title}
         </h1>
       </div>
-      {/* <p className="mb-7 text-xl whitespace-normal break-words">{props.url}</p> */}
       <button
-        onClick={handleClick}
+        onClick={handleOpen}
         className="absolute right-2 bottom-2 inline-block  text-black cursor-pointer items-center justify-center rounded-md border-[1.58px] border-zinc-600  px-5 py-3 font-medium shadow-md transition-all duration-300 hover:[transform:translateY(-.335rem)] hover:shadow-xl">
         Open
+      </button>
+      <button
+        onClick={handleDeleteClick}
+        className="absolute right-24 bottom-2 inline-block  text-black cursor-pointer items-center justify-center rounded-md border-[1.58px] border-zinc-600  px-5 py-3 font-medium shadow-md transition-all duration-300 hover:[transform:translateY(-.335rem)] hover:shadow-xl">
+        Delete
       </button>
     </div>
   );

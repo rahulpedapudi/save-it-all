@@ -32,6 +32,12 @@ export default function DetailPage() {
     <div className="p-4">
       <h1 className="text-2xl font-bold">{data.title}</h1>
       <p>{data.url}</p>
+      <div>
+        <p>tags</p>
+      </div>
+      <div className="flex gap-4">
+        <button>Update</button>
+      </div>
     </div>
   );
 }

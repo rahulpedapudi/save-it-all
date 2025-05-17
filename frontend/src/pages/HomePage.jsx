@@ -11,6 +11,24 @@ export default function HomePage() {
       .catch((error) => console.error(error));
   }, []);
 
+  const handleDelete = async (_id) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/links/${_id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (res.ok) {
+        setData((prev) => prev.filter((item) => item._id !== _id));
+      } else {
+        console.error("Delete Failed");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
     <div className="p-10 flex justify-between items-center flex-wrap">
       {data ? (
@@ -20,7 +38,9 @@ export default function HomePage() {
               key={item._id}
               _id={item._id}
               title={item.title}
-              url={item.url}></Card>
+              url={item.url}
+              handleDelete={handleDelete}
+            />
           ))}
         </>
       ) : (
