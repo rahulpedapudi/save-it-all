@@ -18,6 +18,9 @@ CORS(app)
 # api Blueprint
 app.register_blueprint(api_bp, url_prefix='/api')
 
+with app.app_context():
+    mongo.db.links.create_index("url", unique=True)
+
 
 if __name__ == '__main__':
     app.run(port=5000, debug=True)
