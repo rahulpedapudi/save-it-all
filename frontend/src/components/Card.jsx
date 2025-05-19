@@ -2,10 +2,13 @@
 import { useNavigate } from "react-router-dom";
 
 function Card(props) {
+  // state used for confirmation popup
   const [showConfirm, setShowConfirm] = useState(false);
 
+  // navigate programmatically in the browser in response to user interactions or effect
   const navigate = useNavigate();
 
+  // navigates to the detailed view of the link
   const handleOpen = () => {
     navigate(`/detail/${props._id}`);
   };
