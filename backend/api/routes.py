@@ -1,23 +1,41 @@
 ﻿from flask import request, jsonify, Blueprint, current_app
 from pymongo.errors import DuplicateKeyError
 from bson.objectid import ObjectId
+from datetime import datetime
+from tasks import tag_extraction
 
 # blueprint
 api_bp = Blueprint('api', __name__)
 
 
+# endpoint for saving the link, used in browser extension only
 @api_bp.route("/save", methods=["POST"])
 def save_data():
     mongo = current_app.mongo
     data = request.json
-    print("Data Received", data)
+    id = data['id']
+    url = data['url']
+    title = data['title']
 
+    link = {
+        "tab_id": id,
+        "title": title,
+        "url": url,
+        "tags": [],
+        "created_at": datetime.now().isoformat()
+    }
+
+    link['tags'] = tag_extraction.generate_tags(link["url"])
+
+    # only inserting unique links, throws and error if link already saved
+    # ? do we need to accept duplicates?
     try:
-        result = mongo.db.links.insert_one(data)
+        result = mongo.db.links.insert_one(link)
+        print("Data Received", link)
         return jsonify({
             "status": "success",
             "inserted_id": str(result.inserted_id),
-            "received": data
+            "received": link
         }), 201
     except DuplicateKeyError:
         return jsonify({
@@ -26,6 +44,7 @@ def save_data():
         }), 409
 
 
+# endpoint to get all the posts in the database
 @api_bp.route("/links", methods=["GET"])
 def get_links():
     mongo = current_app.mongo
@@ -36,11 +55,13 @@ def get_links():
     return jsonify(links)
 
 
+# ? how can we do this?
 @api_bp.route("/analyze/<int:id>", methods=["GET"])
 def get_analyzed_post(id):
     pass
 
 
+# endpoint for getting a particular link using the objectId, and also for delete the link from the database using the objectId
 @api_bp.route("/links/<id>", methods=["GET", "DELETE"])
 def handle_link(id):
     mongo = current_app.mongo
