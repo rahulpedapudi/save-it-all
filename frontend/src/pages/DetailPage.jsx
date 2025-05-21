@@ -21,7 +21,19 @@ export default function DetailPage() {
     };
 
     fetchData();
-  }, []);
+  }, [_id]);
+
+  // calls summary endpoint which summarises and saves the data to the database, and fetches the latest data from another endpoint and updating the data using setData() with the latest data.
+  const handleSummary = async () => {
+    try {
+      await fetch(`http://localhost:5000/api/analyze/${_id}`);
+      const updatedData = await fetch(`http://localhost:5000/api/links/${_id}`);
+      const updatedJson = await updatedData.json();
+      setData(updatedJson);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
 
   // if no data is fetched
   if (!data) {
@@ -45,19 +57,33 @@ export default function DetailPage() {
             {data.url}
           </a>
         </div>
-        <button className="group group-hover:before:duration-500 group-hover:after:duration-500 after:duration-500 hover:border-rose-300 hover:before:[box-shadow:_20px_20px_20px_30px_#a21caf] duration-500 before:duration-500 hover:duration-500 underline underline-offset-2 hover:after:-right-8 hover:before:right-12 hover:before:-bottom-8 hover:before:blur hover:underline hover:underline-offset-4  origin-left hover:decoration-2 hover:text-rose-300 relative bg-neutral-800 h-16 w-64 border text-left p-3 text-gray-50 text-base font-bold rounded-lg  overflow-hidden  before:absolute before:w-12 before:h-12 before:content[''] before:right-1 before:top-1 before:z-10 before:bg-violet-500 before:rounded-full before:blur-lg  after:absolute after:z-10 after:w-20 after:h-20 after:content['']  after:bg-rose-300 after:right-8 after:top-3 after:rounded-full after:blur-lg">
+        <button
+          onClick={handleSummary}
+          className="group group-hover:before:duration-500 group-hover:after:duration-500 after:duration-500 hover:border-rose-300 hover:before:[box-shadow:_20px_20px_20px_30px_#a21caf] duration-500 before:duration-500 hover:duration-500 underline underline-offset-2 hover:after:-right-8 hover:before:right-12 hover:before:-bottom-8 hover:before:blur hover:underline hover:underline-offset-4  origin-left hover:decoration-2 hover:text-rose-300 relative bg-neutral-800 h-16 w-64 border text-left p-3 text-gray-50 text-base font-bold rounded-lg  overflow-hidden  before:absolute before:w-12 before:h-12 before:content[''] before:right-1 before:top-1 before:z-10 before:bg-violet-500 before:rounded-full before:blur-lg  after:absolute after:z-10 after:w-20 after:h-20 after:content['']  after:bg-rose-300 after:right-8 after:top-3 after:rounded-full after:blur-lg">
           Summarise
         </button>
       </div>
       <div className="m-4 flex gap-8 rounded-md">
-        {!data || !data.tags || data.tags.length === 0 ? (
-          <button className="border-2 p-2">Generate Tags</button>
-        ) : (
-          data.tags.map((item, index) => <li key={index}>{item}</li>)
+        {!data || !data.tags || data.tags.length === 0 ? null : (
+          <ul className="flex gap-2 flex-wrap">
+            {data.tags.map((item, index) => (
+              <li
+                key={index}
+                className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm">
+                {item}
+              </li>
+            ))}
+          </ul>
         )}
       </div>
       <div className="border h-80 w-auto my-8 flex justify-center items-center">
-        <h1 className="text-2xl font-bold">Summary</h1>
+        {data.summary ? (
+          <h1 className="text-2xl font-bold">{data.summary}</h1>
+        ) : (
+          <h1 className="text-lg text-gray-500">
+            Click "Summarize" to generate summary
+          </h1>
+        )}
       </div>
 
       <div className="flex gap-4">
