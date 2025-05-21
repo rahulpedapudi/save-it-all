@@ -2,7 +2,8 @@
 from pymongo.errors import DuplicateKeyError
 from bson.objectid import ObjectId
 from datetime import datetime
-from tasks import tag_extraction
+from tasks import summarization
+from tasks import content_extract
 
 # blueprint
 api_bp = Blueprint('api', __name__)
@@ -22,10 +23,9 @@ def save_data():
         "title": title,
         "url": url,
         "tags": [],
+        "summary": "",
         "created_at": datetime.now().isoformat()
     }
-
-    link['tags'] = tag_extraction.generate_tags(link["url"])
 
     # only inserting unique links, throws and error if link already saved
     # ? do we need to accept duplicates?
@@ -55,10 +55,35 @@ def get_links():
     return jsonify(links)
 
 
-# ? how can we do this?
-@api_bp.route("/analyze/<int:id>", methods=["GET"])
+# endpoint to call the gemini api to summarise the post and update the summarised content in the database
+@api_bp.route("/analyze/<id>", methods=["GET"])
 def get_analyzed_post(id):
-    pass
+    try:
+        mongo = current_app.mongo
+        post = mongo.db.links.find_one({"_id": ObjectId(id)})
+        if not post:
+            return jsonify({"error": "Post Not Found"}), 404
+
+        # get html content by passing the url
+        content = content_extract.get_content(post['url'])
+
+        if content:
+            # passing the content to the gemini api to get the actual summarisation
+            summary = summarization.summarise(content)
+
+            # update the database; summary and tags.
+            mongo.db.links.update_one(
+                {"_id": ObjectId(id)},
+                {"$set": {
+                    "summary": summary['summary'],
+                    "tags": summary['tags']
+                }}
+            )
+            return jsonify({"message": "Summary Updated", "summary": summary}), 200
+        else:
+            return jsonify({"message": "Error Extracting the content", "summary": None}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 # endpoint for getting a particular link using the objectId, and also for delete the link from the database using the objectId
