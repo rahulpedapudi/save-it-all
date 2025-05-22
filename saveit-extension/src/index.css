@@ -1,0 +1,49 @@
+@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@8..48,700;8..48,800&family=Inter:wght@300;400;500;600;700&display=swap");
+
+/* 2. Tailwind Base, Components, and Utilities */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 3. Define CSS Variables for Light & Dark Mode */
+
+/* Default (Light) Theme */
+:root {
+  /* Backgrounds */
+  --color-saveit-background: #f9f9f9;
+  --color-saveit-card: #ffffff;
+
+  /* Text Colors */
+  --color-saveit-text: #1a1a1a;
+  --color-saveit-text-secondary: #4a5568;
+
+  /* Borders & Dividers */
+  --color-saveit-border: #e2e8f0; /* Tailwind's gray-200 */
+}
+
+/* Dark Theme (applied when <html class="dark">) */
+.dark {
+  /* Backgrounds */
+  --color-saveit-background: #1a1a1a;
+  --color-saveit-card: #2d3748;
+
+  /* Text Colors */
+  --color-saveit-text: #f9f9f9;
+  --color-saveit-text-secondary: #a0aec0;
+  /* Borders & Dividers */
+  --color-saveit-border: #4a5568; /* Tailwind's gray-700 */
+}
+
+/* 4. Base Styles  */
+
+/* Apply default font and colors to the body */
+body {
+  @apply font-body text-saveit-text bg-saveit-background antialiased;
+  /* Smooth transitions for theme changes */
+  @apply transition-colors duration-300 ease-in-out;
+}
+
+/* Global focus states (optional, for accessibility) */
+*:focus-visible {
+  @apply outline-none ring-2 ring-saveit-accent ring-offset-2 ring-offset-saveit-background;
+}
