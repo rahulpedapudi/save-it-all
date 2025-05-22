@@ -4,10 +4,109 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Save It All</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+      rel="stylesheet" />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <button id="submit-btn" type="submit" class="bookmarkBtn">
+    <!-- AppBar -->
+    <nav class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-2">
+        <img
+          width="28px"
+          height="28px"
+          src="./assets/logo.svg"
+          alt=""
+          srcset="" />
+        <h2>Save<span class="font-bold">It</span></h2>
+      </div>
+      <button id="close-btn" type="button" aria-label="Close" title="Close">
+        <i>
+          <img src="./assets/close_.svg" alt="Close" />
+        </i>
+      </button>
+    </nav>
+
+    <!-- linkInfo -->
+    <section class="link-info mb-4">
+      <h1 id="title-display" class="page-title text-3xl font-bold mb-2"></h1>
+      <a
+        href=""
+        id="url-display"
+        class="block w-full hover: underline truncate text-lg text-blue-500 font-bold"></a>
+      <button
+        id="primary-btn"
+        class="w-full h-12 mt-4 text-lg font-bold"
+        type="button">
+        Save Page
+      </button>
+    </section>
+
+    <!-- Tags -->
+    <section class="tags mb-4">
+      <form action="">
+        <label class="text-lg font-bold" for="tags">Tags</label><br />
+        <input
+          class="border-2 w-full h-10 p-4 mb-2"
+          type="text"
+          name="Tags"
+          id="Tags"
+          placeholder="Add Tags (e.g./ productivity, AI, research)" />
+      </form>
+      <div>
+        <ul class="flex">
+          <li
+            class="bg-blue-500 text-white px-3 py-1 rounded-full text-sm mr-1 flex items-center gap-2">
+            ai
+            <i>
+              <img
+                width="16px"
+                height="16px"
+                src="./assets/close_.svg"
+                alt=""
+                srcset="" />
+            </i>
+          </li>
+          <li
+            class="bg-blue-500 text-white px-3 py-1 rounded-full text-sm mr-1 flex items-center gap-2">
+            tech
+            <i>
+              <img
+                width="16px"
+                height="16px"
+                src="./assets/close_.svg"
+                alt=""
+                srcset="" />
+            </i>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- note -->
+    <section class="note">
+      <form action="">
+        <label class="text-lg font-bold" for="note">Note</label><br />
+        <input
+          class="border-2 w-full h-full p-4 mb-2"
+          type="text"
+          name="note"
+          id="note"
+          placeholder="Add a personal note or context.." />
+      </form>
+    </section>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
+
+<!-- <button id="submit-btn" type="submit" class="bookmarkBtn">
       <span class="IconContainer">
         <svg viewBox="0 0 384 512" height="0.9em" class="icon">
           <path
@@ -15,11 +114,8 @@
         </svg>
       </span>
       <p class="text">Save</p>
-    </button>
-    <p id="response"></p>
+    </button> -->
+<!-- <p id="response"></p>
     <a target="_blank" rel="noopener" href=" http://localhost:5173/"
       >Open Saved Links</a
-    >
-    <script src="popup.js"></script>
-  </body>
-</html>
+    > -->
