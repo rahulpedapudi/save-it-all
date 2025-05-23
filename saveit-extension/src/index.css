@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@8..48,700;8..48,800&family=Inter:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;700;800&family=Inter:wght@300;400;500;600;700&display=swap");
 
 /* 2. Tailwind Base, Components, and Utilities */
 @tailwind base;
@@ -35,13 +35,6 @@
 }
 
 /* 4. Base Styles  */
-
-/* Apply default font and colors to the body */
-body {
-  @apply font-body text-saveit-text bg-saveit-background antialiased;
-  /* Smooth transitions for theme changes */
-  @apply transition-colors duration-300 ease-in-out;
-}
 
 /* Global focus states (optional, for accessibility) */
 *:focus-visible {

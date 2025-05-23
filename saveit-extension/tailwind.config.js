@@ -26,12 +26,21 @@ export default {
 
         "saveit-success": "rgb(34 197 94)", // green-500
         "saveit-danger": "rgb(239 68 68)", // red-500
-        "saveit-warning": "rgb(245 158 11)", // amber-500
       },
       fontFamily: {
         heading: ["Bricolage Grotesque", "sans-serif"],
-
         body: ["Inter", "sans-serif"],
+      },
+      keyframes: {
+        // Define keyframes for a single bouncing/fading dot
+        "dot-pulse-bounce": {
+          "0%, 100%": { opacity: "0.3", transform: "scale(0.8)" }, // Start and end slightly faded and smaller
+          "50%": { opacity: "1", transform: "scale(1.2)" }, // Midpoint is fully visible and slightly larger (the "bounce")
+        },
+      },
+      animation: {
+        // 'saving-dot-bounce' is the utility class name you'll use for each dot
+        "saving-dot-bounce": "dot-pulse-bounce 1.5s ease-in-out infinite", // 1.5s duration, ease-in-out for smoothness, infinite loop
       },
     },
   },
