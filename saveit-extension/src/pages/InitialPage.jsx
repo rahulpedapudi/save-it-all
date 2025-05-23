@@ -14,6 +14,36 @@ export default function InitialPage({ onSave }) {
 
   const [isSaving, setIsSaving] = useState(false);
 
+  const [hasSelectedText, setHasSelectedText] = useState(false);
+  const [TextSelected, setTextSelected] = useState("");
+
+  useEffect(() => {
+    const fetchSelectedText = async () => {
+      const [tab] = await chrome.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+      chrome.tabs.sendMessage(
+        tab.id,
+        { type: "GET_SELECTED_TEXT" },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            console.warn("No Content script or page doesn't support it.");
+            setHasSelectedText(false);
+            return;
+          }
+          if (response?.text?.trim()) {
+            setTextSelected(response.text);
+            setHasSelectedText(true);
+          } else {
+            setHasSelectedText(false);
+          }
+        }
+      );
+    };
+    fetchSelectedText();
+  }, []);
+
   useEffect(() => {
     chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
       setTabInfo({
@@ -26,7 +56,6 @@ export default function InitialPage({ onSave }) {
 
   const handleSave = async () => {
     if (isSaving) return;
-
     setIsSaving(true);
 
     const updatedTabInfo = {
@@ -36,8 +65,16 @@ export default function InitialPage({ onSave }) {
     };
 
     try {
-      await onSave(updatedTabInfo, navigate);
+      const res = await onSave(updatedTabInfo);
+      if (res.ok) {
+        navigate("/success");
+      } else if (res.status === 409) {
+        navigate("/warning");
+      } else {
+        navigate("/error");
+      }
     } catch (error) {
+      console.error(error);
       navigate("/error");
     } finally {
       setIsSaving(false);
@@ -66,15 +103,32 @@ export default function InitialPage({ onSave }) {
     <div className="w-[400px]  p-[20px] m-auto border-2">
       <AppBar />
       <section className="font-body link-info mb-4">
-        <h1 id="title-display" className=" page-title text-3xl font-bold mb-2">
+        <h1
+          id="title-display"
+          className={`${
+            hasSelectedText ? "line-clamp-2 overflow-hidden mb-4" : null
+          } page-title text-3xl font-bold mb-2`}>
           {tabInfo?.title}
         </h1>
-        <a
-          href=""
-          id="url-display"
-          className="block w-full hover: underline truncate text-lg text-blue-500 font-bold">
-          {tabInfo?.url}
-        </a>
+
+        {hasSelectedText ? (
+          <>
+            <p className="text-saveit-accent text-lg font-extrabold font-heading mb-4">
+              Saving Selected Text
+            </p>
+            <h3 className="text-2xl line-clamp-3 font-bold ">
+              "{TextSelected}"
+            </h3>
+          </>
+        ) : (
+          <a
+            href=""
+            id="url-display"
+            className="block w-full hover: underline truncate text-lg text-blue-500 font-bold">
+            {tabInfo?.url}
+          </a>
+        )}
+
         <button
           id="primary-btn"
           className={`w-full h-12 mt-4 text-lg rounded-[5px] font-bold text-saveit-light ${
@@ -111,6 +165,8 @@ export default function InitialPage({ onSave }) {
                 </span>
               </span>
             </>
+          ) : hasSelectedText ? (
+            "Save Selection"
           ) : (
             "Save Page"
           )}
