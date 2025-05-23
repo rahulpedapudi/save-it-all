@@ -17,13 +17,16 @@ def save_data():
     id = data['id']
     url = data['url']
     title = data['title']
+    tags = data['tags']
+    note = data['note']
 
     link = {
         "tab_id": id,
         "title": title,
         "url": url,
-        "tags": [],
+        "tags": tags,
         "summary": "",
+        "note": note,
         "created_at": datetime.now().isoformat()
     }
 
