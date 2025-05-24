@@ -4,6 +4,7 @@ from bson.objectid import ObjectId
 from datetime import datetime
 from tasks import summarization
 from tasks import content_extract
+from werkzeug.exceptions import BadRequest, NotFound
 
 # blueprint
 api_bp = Blueprint('api', __name__)
@@ -105,3 +106,22 @@ def handle_link(id):
             return jsonify({"message": "deleted successfully"}), 200
         else:
             return jsonify({"error": "Link not found"}), 404
+
+
+@api_bp.route("/link/<id>", methods=["PATCH"])
+def update_link(id):
+    mongo = current_app.mongo
+    try:
+        updated_data = request.get_json()
+        if not updated_data:
+            raise BadRequest("No data provided for update")
+        result = mongo.db.links.update_one({"_id": ObjectId(id)}, {
+            "$set": updated_data
+        })
+
+        if result.matched_count == 0:
+            raise NotFound(f"No document found with id: {id}")
+
+        return jsonify({"message": "Document updated successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
