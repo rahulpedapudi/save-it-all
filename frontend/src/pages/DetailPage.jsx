@@ -1,5 +1,6 @@
 ﻿import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
+import UpdateForm from "../components/UpdateForm";
 
 export default function DetailPage() {
   // gets _id from the parameters of the url - /detail/:_id
@@ -7,6 +8,33 @@ export default function DetailPage() {
 
   // state for data
   const [data, setData] = useState(null);
+
+  const [isUpdateClicked, setIsUpdateClicked] = useState(false);
+
+  const handleClick = () => {
+    setIsUpdateClicked((prev) => !prev);
+  };
+
+  const handleUpdate = async (updatedData) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/link/${_id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedData),
+      });
+
+      if (res.ok) {
+        const updatedData = await fetch(
+          `http://localhost:5000/api/links/${_id}`
+        );
+        const updatedJson = await updatedData.json();
+        setData(updatedJson);
+        setIsUpdateClicked(false);
+      }
+    } catch (error) {
+      console.error("error", error);
+    }
+  };
 
   // fetching data from the links/id endpoint for detailed view of the link.
   useEffect(() => {
@@ -45,9 +73,6 @@ export default function DetailPage() {
     return <div className="p-4 text-red-500">{data.error}</div>;
   }
 
-  // ? what details should i render?
-  // TODO: display tags, summary, topImage, metadata?
-
   return (
     <div className="p-4">
       <div className="flex justify-between">
@@ -78,6 +103,7 @@ export default function DetailPage() {
           </ul>
         )}
       </div>
+      <div>{data.note}</div>
       <div className="border h-80 w-auto my-8 flex justify-center items-center">
         {data.summary ? (
           <h1 className="text-2xl font-bold">{data.summary}</h1>
@@ -87,12 +113,19 @@ export default function DetailPage() {
           </h1>
         )}
       </div>
-
-      <div className="flex gap-4">
-        <button className="inline-block  text-black cursor-pointer items-center justify-center rounded-md border-[1.58px] border-zinc-600  px-5 py-3 font-medium shadow-md transition-all duration-300 hover:[transform:translateY(-.335rem)] hover:shadow-xl">
-          Update
-        </button>
-      </div>
+      <button
+        onClick={handleClick}
+        class="rounded-md bg-slate-800 py-2 px-4 border border-transparent text-center text-sm text-white transition-all shadow-md hover:shadow-lg focus:bg-slate-700 focus:shadow-none active:bg-slate-700 hover:bg-slate-700 active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none ml-2"
+        type="button">
+        Update
+      </button>
+      {isUpdateClicked ? (
+        <UpdateForm
+          initialData={data}
+          onClose={() => setIsUpdateClicked(false)}
+          onUpdate={handleUpdate}
+        />
+      ) : null}
     </div>
   );
 }
