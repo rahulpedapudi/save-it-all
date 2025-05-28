@@ -1,9 +1,9 @@
 ﻿import React, { useState, useEffect } from "react";
-import Card from "../components/Card";
+import Card from "../components/Card.js";
 
 export default function HomePage() {
   // state for storing data
-  const [data, setData] = useState(null);
+  const [data, setData] = useState([]);
 
   // calling the endpoint which fetches all links
   useEffect(() => {
@@ -14,7 +14,7 @@ export default function HomePage() {
   }, []);
 
   // handling delete
-  const handleDelete = async (_id) => {
+  const handleDelete = async (_id: string) => {
     try {
       const res = await fetch(`http://localhost:5000/api/links/${_id}`, {
         method: "DELETE",
@@ -25,7 +25,7 @@ export default function HomePage() {
 
       // updating the UI by filtering out the item that has been deleted currently.
       if (res.ok) {
-        setData((prev) => prev.filter((item) => item._id !== _id));
+        setData((prev: any) => prev.filter((item: any) => item._id !== _id));
       } else {
         console.error("Delete Failed");
       }
@@ -38,13 +38,12 @@ export default function HomePage() {
     <div className="p-10 flex justify-evenly items-center flex-wrap">
       {data ? (
         <>
-          {data.map((item) => (
+          {data.map((item: any) => (
             <Card
               key={item._id}
               _id={item._id}
               title={item.title}
               url={item.url}
-              tags={item.tags}
               handleDelete={handleDelete}
             />
           ))}

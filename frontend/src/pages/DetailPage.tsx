@@ -1,13 +1,25 @@
 ﻿import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import UpdateForm from "../components/UpdateForm";
+import { Button } from "@/components/ui/button";
 
 export default function DetailPage() {
   // gets _id from the parameters of the url - /detail/:_id
   const { _id } = useParams();
 
+  // Define the type for your data
+  interface LinkData {
+    _id: string;
+    title: string;
+    url: string;
+    tags: string[];
+    note: string;
+    summary: string;
+    [key: string]: any; // for any additional properties
+  }
+
   // state for data
-  const [data, setData] = useState(null);
+  const [data, setData] = useState<LinkData | null>(null);
 
   const [isUpdateClicked, setIsUpdateClicked] = useState(false);
 
@@ -15,7 +27,7 @@ export default function DetailPage() {
     setIsUpdateClicked((prev) => !prev);
   };
 
-  const handleUpdate = async (updatedData) => {
+  const handleUpdate = async (updatedData: any) => {
     try {
       const res = await fetch(`http://localhost:5000/api/link/${_id}`, {
         method: "PATCH",
@@ -68,11 +80,6 @@ export default function DetailPage() {
     return <div className="p-4">Loading...</div>;
   }
 
-  // Optional: Handle error returned from API
-  if (data.error) {
-    return <div className="p-4 text-red-500">{data.error}</div>;
-  }
-
   return (
     <div className="p-4">
       <div className="flex justify-between">
@@ -115,7 +122,7 @@ export default function DetailPage() {
       </div>
       <button
         onClick={handleClick}
-        class="rounded-md bg-slate-800 py-2 px-4 border border-transparent text-center text-sm text-white transition-all shadow-md hover:shadow-lg focus:bg-slate-700 focus:shadow-none active:bg-slate-700 hover:bg-slate-700 active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none ml-2"
+        className="rounded-md bg-slate-800 py-2 px-4 border border-transparent text-center text-sm text-white transition-all shadow-md hover:shadow-lg focus:bg-slate-700 focus:shadow-none active:bg-slate-700 hover:bg-slate-700 active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none ml-2"
         type="button">
         Update
       </button>

@@ -1,9 +1,16 @@
 ﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-function Card(props) {
+type CardProps = {
+  _id: string;
+  title: string;
+  url: string;
+  handleDelete: (_id: string) => Promise<void>;
+};
+
+function Card(props: CardProps) {
   // state used for confirmation popup
-  const [showConfirm, setShowConfirm] = useState(false);
+  const [showConfirm, setShowConfirm] = useState<boolean>(false);
 
   // navigate programmatically in the browser in response to user interactions or effect
   const navigate = useNavigate();

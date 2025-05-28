@@ -1,8 +1,35 @@
 ﻿import { useState } from "react";
 
-export default function UpdateForm({ initialData, onUpdate, onClose }) {
+interface UpdateFormProps {
+  initialData: {
+    title?: string;
+    url?: string;
+    note?: string;
+    tags?: string[];
+  };
+  onUpdate: (data: {
+    title: string;
+    url: string;
+    note: string;
+    tags: string[];
+  }) => void;
+  onClose: () => void;
+}
+
+interface UpdateFormData {
+  title: string;
+  url: string;
+  note: string;
+  tags: string;
+}
+
+export default function UpdateForm({
+  initialData,
+  onUpdate,
+  onClose,
+}: UpdateFormProps) {
   // initial data for displaying in the form: initialData prop
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<UpdateFormData>({
     title: initialData.title || "",
     url: initialData.url || "",
     note: initialData.note || "",
@@ -10,16 +37,19 @@ export default function UpdateForm({ initialData, onUpdate, onClose }) {
   });
 
   // handling any changes in the form and changing the state of formData.
-  const handleChange = (e) => {
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { id, value } = e.target;
-    setFormData((prev) => ({
+    setFormData((prev: UpdateFormData) => ({
       ...prev,
       [id]: value,
     }));
   };
 
   // handling submit by sending the formdata to the parent
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: { preventDefault: () => void }) => {
     e.preventDefault();
     const updatedData = {
       ...formData,
@@ -112,7 +142,6 @@ export default function UpdateForm({ initialData, onUpdate, onClose }) {
             </label>
             <textarea
               id="note"
-              type="text"
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-150 ease-in-out"
               value={formData.note}
               onChange={handleChange}
