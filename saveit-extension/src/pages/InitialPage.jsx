@@ -29,6 +29,7 @@ export default function InitialPage({ onSave }) {
         (response) => {
           if (chrome.runtime.lastError) {
             console.warn("No Content script or page doesn't support it.");
+            console.error(chrome.runtime.lastError);
             setHasSelectedText(false);
             return;
           }
@@ -58,11 +59,20 @@ export default function InitialPage({ onSave }) {
     if (isSaving) return;
     setIsSaving(true);
 
-    const updatedTabInfo = {
-      ...tabInfo,
-      tags,
-      note,
-    };
+    // Start with the basic tab information
+    const updatedTabInfo = { ...tabInfo };
+
+    // Add tags and note
+    updatedTabInfo.tags = tags;
+    updatedTabInfo.note = note;
+
+    // Determine the save type based on whether text is selected
+    updatedTabInfo.save_type = hasSelectedText ? "selected_text" : "full_page";
+
+    // If text is selected, include the selected text
+    if (hasSelectedText) {
+      updatedTabInfo.selected_text = TextSelected;
+    }
 
     try {
       const res = await onSave(updatedTabInfo);

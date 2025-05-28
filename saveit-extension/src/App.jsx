@@ -10,7 +10,7 @@ import ErrorPage from "./pages/ErrorPage";
 import WarningPage from "./pages/Warning";
 
 export default function App() {
-  const handleSave = async (dataToSave) => {
+  const onSave = async (dataToSave) => {
     const res = await fetch("http://localhost:5000/api/save", {
       method: "POST",
       headers: {
@@ -25,7 +25,7 @@ export default function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<InitialPage onSave={handleSave} />} />
+        <Route path="/" element={<InitialPage onSave={onSave} />} />
         <Route path="/success" element={<SuccessPage />} />
         <Route path="/error" element={<ErrorPage />} />
         <Route path="/warning" element={<WarningPage />} />
