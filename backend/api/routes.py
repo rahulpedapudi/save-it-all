@@ -15,24 +15,20 @@ api_bp = Blueprint('api', __name__)
 def save_data():
     mongo = current_app.mongo
     data = request.json
-    id = data['id']
-    url = data['url']
-    title = data['title']
-    tags = data['tags']
-    note = data['note']
 
     link = {
-        "tab_id": id,
-        "title": title,
-        "url": url,
-        "tags": tags,
+        "tab_id": data['id'],
+        "title": data['title'],
+        "url": data['url'],
+        "tags": data['tags'],
         "summary": "",
-        "note": note,
+        "note": data['note'],
+        "save_type": data['save_type'],
+        "selected_text": data.get('selected_text', ""),
         "created_at": datetime.now().isoformat()
     }
 
     # only inserting unique links, throws and error if link already saved
-    # ? do we need to accept duplicates?
     try:
         result = mongo.db.links.insert_one(link)
         print("Data Received", link)
@@ -41,6 +37,7 @@ def save_data():
             "inserted_id": str(result.inserted_id),
             "received": link
         }), 201
+    # TODO: i should merge upgrade the existing record if the user first saved selected text and later chooses to save the full page...
     except DuplicateKeyError:
         return jsonify({
             "status": "duplicate",
