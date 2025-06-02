@@ -28,7 +28,7 @@ function Card(props: CardProps) {
   return (
     <div className=" relative w-72 h-64 border-2 p-4 mb-6 box-border border-black overflow-hidden">
       <div className="mb-9">
-        <h1 className="font-bold text-2xl whitespace-normal break-words">
+        <h1 className="font-bold text-2xl line-clamp-2 overflow-hidden whitespace-normal break-words">
           {props.title}
         </h1>
       </div>

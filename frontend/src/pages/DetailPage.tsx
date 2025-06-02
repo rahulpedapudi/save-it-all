@@ -1,7 +1,6 @@
 ﻿import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import UpdateForm from "../components/UpdateForm";
-import { Button } from "@/components/ui/button";
 
 export default function DetailPage() {
   // gets _id from the parameters of the url - /detail/:_id
