@@ -5,6 +5,7 @@ from datetime import datetime
 from tasks import summarization
 from tasks import content_extract
 from werkzeug.exceptions import BadRequest, NotFound
+from urllib.parse import urlparse
 
 # blueprint
 api_bp = Blueprint('api', __name__)
@@ -16,11 +17,15 @@ def save_data():
     mongo = current_app.mongo
     data = request.json
 
+    url = data['url']
+    domain_name = urlparse(url).netloc.title()
+
     link = {
         "tab_id": data['id'],
         "title": data['title'],
-        "url": data['url'],
+        "url": url,
         "tags": data['tags'],
+        "domain": domain_name,
         "summary": "",
         "note": data['note'],
         "save_type": data['save_type'],
@@ -49,11 +54,20 @@ def save_data():
 @api_bp.route("/links", methods=["GET"])
 def get_links():
     mongo = current_app.mongo
-    links = list(mongo.db.links.find({}))
+
+    tags = request.args.getlist("tags")
+    if tags:
+        links = list(mongo.db.links.find({"tags": {"$in": tags}}))
+        if not links:
+            return jsonify({"links": [], "message": "No posts found for these tags."}), 200
+    else:
+        links = list(mongo.db.links.find({}))
+        if not links:
+            return jsonify({"links": [], "message": "No saved posts yet."}), 200
     # Convert _id to string
     for link in links:
         link["_id"] = str(link["_id"])
-    return jsonify(links)
+    return jsonify({"links": links}), 200
 
 
 # endpoint to call the gemini api to summarise the post and update the summarised content in the database
