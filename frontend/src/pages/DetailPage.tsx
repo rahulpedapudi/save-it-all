@@ -84,7 +84,10 @@ export default function DetailPage() {
       <div className="flex justify-between">
         <div>
           <h1 className="text-2xl font-bold">{data.title}</h1>
-          <a target="_blank" href={data.url}>
+          <a
+            className="underline text-blue-400"
+            target="_blank"
+            href={data.url}>
             {data.url}
           </a>
         </div>

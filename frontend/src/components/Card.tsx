@@ -5,7 +5,9 @@ type CardProps = {
   _id: string;
   title: string;
   url: string;
+  tags: string[];
   handleDelete: (_id: string) => Promise<void>;
+  handleTagClick: (tag: string) => void;
 };
 
 function Card(props: CardProps) {
@@ -31,6 +33,24 @@ function Card(props: CardProps) {
         <h1 className="font-bold text-2xl line-clamp-2 overflow-hidden whitespace-normal break-words">
           {props.title}
         </h1>
+      </div>
+      <div>
+        {props.tags && (
+          <ul className="flex flex-wrap">
+            {props.tags.map((item, index) => (
+              <li
+                className="bg-blue-500 text-xs text-white px-3 py-1 rounded-full mr-1 flex items-center gap-2"
+                key={index}>
+                <button
+                  className="cursor-pointer"
+                  onClick={() => props.handleTagClick(item)}
+                  type="button">
+                  {item}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
       <button
         onClick={handleOpen}

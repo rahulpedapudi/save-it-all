@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "typeRoots": ["./node_modules/@types", "./src/types"],
     "jsx": "react-jsx", // 👈 THIS is the fix
     "module": "ESNext",
     "target": "ESNext",
@@ -7,6 +8,8 @@
     "allowJs": true,
     "esModuleInterop": true,
     "isolatedModules": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
     "strict": true,
     "resolveJsonModule": true,
     "baseUrl": ".",

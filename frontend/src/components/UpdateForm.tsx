@@ -121,7 +121,7 @@ export default function UpdateForm({
             <label
               htmlFor="tags"
               className="block text-gray-700 text-sm font-semibold mb-1">
-              Tags
+              Tags (comma separated)
             </label>
             <input
               id="tags"

@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from "react";
 import Card from "../components/Card.js";
 import { Button } from "@/components/ui/button";
-import { resourceLimits } from "worker_threads";
+import CloseIcon from "../assets/Close_L.svg";
 
 export default function HomePage() {
   // state for storing data
@@ -65,7 +65,10 @@ export default function HomePage() {
 
         // making sure every tag is unique
         if (trimmed_value && !tagSearch.includes(trimmed_value.toLowerCase())) {
-          setTagSearch([...tagSearch, trimmed_value.substring(1)]); // removing the '#'
+          setTagSearch([
+            ...tagSearch,
+            trimmed_value.substring(1).toLowerCase(),
+          ]); // removing the '#'
         }
         setSearchInput("");
       } else {
@@ -76,30 +79,39 @@ export default function HomePage() {
     }
   };
 
-  const handleSearchSubmit = async () => {
-    // url example: /api/links?tags=tech&coding
-    const queryParams = tagSearch
-      .map((tag) => `tags=${encodeURIComponent(tag)}`)
-      .join("&");
-    const url = `http://localhost:5000/api/links?${queryParams}`;
+  // ? idk if this is a good idea
+  useEffect(() => {
+    const fetchData = async () => {
+      const queryParams = tagSearch
+        .map((tag) => `tags=${encodeURIComponent(tag)}`)
+        .join("&");
+      const url = `http://localhost:5000/api/links?${queryParams}`;
 
-    const res = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    const result = await res.json();
-    if (res.status == 200) {
-      setData(result.links);
-      if (result.links.length === 0) {
-        setError(result.message || "No Posts found.");
+      const res = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const result = await res.json();
+      if (res.status == 200) {
+        setData(result.links);
+        if (result.links.length === 0) {
+          setError(result.message || "No Posts found.");
+        } else {
+          setError("");
+        }
       } else {
-        setError("");
+        setError("Something went wrong");
       }
-    } else {
-      setError("Something went wrong");
-    }
+    };
+
+    fetchData();
+  }, [tagSearch]);
+
+  const handleTagDelete = (item: string) => {
+    const filtered = tagSearch.filter((tags) => tags !== item);
+    setTagSearch(filtered);
   };
 
   return (
@@ -118,7 +130,7 @@ export default function HomePage() {
             placeholder="search for links"
           />
         </form>
-        <Button onClick={handleSearchSubmit}>Search</Button>
+        {/* <Button onClick={handleSearchSubmit}>Search</Button> */}
       </div>
       <div>
         <ul className="flex">
@@ -128,6 +140,17 @@ export default function HomePage() {
                   className="bg-blue-500 text-xs text-white px-3 py-1 rounded-full mr-1 flex items-center gap-2"
                   key={index}>
                   {item}
+                  <button
+                    type="button"
+                    onClick={() => handleTagDelete(item)}
+                    title="Remove tag">
+                    <img
+                      width="14px"
+                      height="14px"
+                      src={CloseIcon}
+                      alt="Remove tag"
+                    />
+                  </button>
                 </li>
               ))
             : null}
@@ -141,8 +164,20 @@ export default function HomePage() {
               <Card
                 key={item._id}
                 _id={item._id}
-                title={item.title}
+                title={
+                  item.save_type
+                    ? item.save_type === "full_page"
+                      ? item.title
+                      : item.selected_text
+                    : item.title
+                }
                 url={item.url}
+                tags={item.tags}
+                handleTagClick={(item) => {
+                  if (!tagSearch.includes(item.toLowerCase())) {
+                    setTagSearch([...tagSearch, item]);
+                  }
+                }}
                 handleDelete={handleDelete}
               />
             ))}
