@@ -20,6 +20,7 @@ app.register_blueprint(api_bp, url_prefix='/api')
 
 with app.app_context():
     mongo.db.links.create_index("url", unique=True)
+    mongo.db.links.create_index([("tags", 1)])
 
 
 if __name__ == '__main__':

@@ -18,18 +18,23 @@ def save_data():
     data = request.json
 
     url = data['url']
-    domain_name = urlparse(url).netloc.title()
+    domain_name = urlparse(url).netloc.lower()
+
+    # extracting the xyz from www.xyz.com
+    domain_name = domain_name[domain_name.index(
+        '.') + 1: domain_name.rindex('.')]
 
     link = {
         "tab_id": data['id'],
         "title": data['title'],
         "url": url,
-        "tags": data['tags'],
+        "tags": [domain_name] + data['tags'],
         "domain": domain_name,
         "summary": "",
         "note": data['note'],
         "save_type": data['save_type'],
         "selected_text": data.get('selected_text', ""),
+        "is_favorite": False,
         "created_at": datetime.now().isoformat()
     }
 
@@ -56,12 +61,14 @@ def get_links():
     mongo = current_app.mongo
 
     tags = request.args.getlist("tags")
+    tags = [tag.lower() for tag in tags]
     if tags:
-        links = list(mongo.db.links.find({"tags": {"$in": tags}}))
+        query = {"tags": {"$in": tags}}
+        links = list(mongo.db.links.find(query).sort("created_at", -1))
         if not links:
             return jsonify({"links": [], "message": "No posts found for these tags."}), 200
     else:
-        links = list(mongo.db.links.find({}))
+        links = list(mongo.db.links.find({}).sort("created_at", -1))
         if not links:
             return jsonify({"links": [], "message": "No saved posts yet."}), 200
     # Convert _id to string
