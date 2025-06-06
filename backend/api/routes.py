@@ -7,15 +7,19 @@ from tasks import content_extract
 from werkzeug.exceptions import BadRequest, NotFound
 from urllib.parse import urlparse
 
+from .auth import require_clerk_auth
+
 # blueprint
 api_bp = Blueprint('api', __name__)
 
 
 # endpoint for saving the link, used in browser extension only
 @api_bp.route("/save", methods=["POST"])
+@require_clerk_auth
 def save_data():
     mongo = current_app.mongo
     data = request.json
+    user_id = request.user_id
 
     url = data['url']
     domain_name = urlparse(url).netloc.lower()
@@ -25,6 +29,7 @@ def save_data():
         '.') + 1: domain_name.rindex('.')]
 
     link = {
+        "user_id": user_id,
         "tab_id": data['id'],
         "title": data['title'],
         "url": url,
@@ -47,7 +52,7 @@ def save_data():
             "inserted_id": str(result.inserted_id),
             "received": link
         }), 201
-    # TODO: i should merge upgrade the existing record if the user first saved selected text and later chooses to save the full page...
+    # TODO: i should merge update the existing record if the user first saved selected text and later chooses to save the full page...
     except DuplicateKeyError:
         return jsonify({
             "status": "duplicate",
@@ -57,28 +62,34 @@ def save_data():
 
 # endpoint to get all the posts in the database
 @api_bp.route("/links", methods=["GET"])
+@require_clerk_auth
 def get_links():
     mongo = current_app.mongo
+    user_id = request.user_id
 
     tags = request.args.getlist("tags")
     tags = [tag.lower() for tag in tags]
+
+    query = {"user_id": user_id}
+
     if tags:
-        query = {"tags": {"$in": tags}}
-        links = list(mongo.db.links.find(query).sort("created_at", -1))
-        if not links:
-            return jsonify({"links": [], "message": "No posts found for these tags."}), 200
-    else:
-        links = list(mongo.db.links.find({}).sort("created_at", -1))
-        if not links:
-            return jsonify({"links": [], "message": "No saved posts yet."}), 200
+        query["tags"] = {"$in": tags}
+
+    links = list(mongo.db.links.find(query).sort("created_at", -1))
+
+    if not links:
+        return jsonify({"links": [], "message": "No posts found."}), 200
+
     # Convert _id to string
     for link in links:
         link["_id"] = str(link["_id"])
+
     return jsonify({"links": links}), 200
 
 
 # endpoint to call the gemini api to summarise the post and update the summarised content in the database
 @api_bp.route("/analyze/<id>", methods=["GET"])
+# @require_clerk_auth
 def get_analyzed_post(id):
     try:
         mongo = current_app.mongo
@@ -98,7 +109,7 @@ def get_analyzed_post(id):
                 {"_id": ObjectId(id)},
                 {"$set": {
                     "summary": summary['summary'],
-                    "tags": summary['tags']
+                    "tags": post["tags"] + summary['tags']
                 }}
             )
             return jsonify({"message": "Summary Updated", "summary": summary}), 200
@@ -110,16 +121,19 @@ def get_analyzed_post(id):
 
 # endpoint for getting a particular link using the objectId, and also for delete the link from the database using the objectId
 @api_bp.route("/links/<id>", methods=["GET", "DELETE"])
+# @require_clerk_auth
 def handle_link(id):
     mongo = current_app.mongo
     if request.method == 'GET':
-        link = mongo.db.links.find_one({"_id": ObjectId(id)})
+        link = mongo.db.links.find_one(
+            {"_id": ObjectId(id)})
         if link:
             link["_id"] = str(link["_id"])
             return jsonify(link)
         return jsonify({"error": "Link not Found!"}), 404
     if request.method == 'DELETE':
-        res = mongo.db.links.delete_one({"_id": ObjectId(id)})
+        res = mongo.db.links.delete_one(
+            {"_id": ObjectId(id)})
         if res.deleted_count == 1:
             return jsonify({"message": "deleted successfully"}), 200
         else:
@@ -127,6 +141,7 @@ def handle_link(id):
 
 
 @api_bp.route("/link/<id>", methods=["PATCH"])
+# @require_clerk_auth
 def update_link(id):
     mongo = current_app.mongo
     try:

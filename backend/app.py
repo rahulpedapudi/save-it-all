@@ -13,13 +13,13 @@ mongo = PyMongo(app)
 app.mongo = mongo
 
 # Enabling CORS
-CORS(app)
+CORS(app, origins=["http://localhost:5173"], supports_credentials=True)
 
 # api Blueprint
 app.register_blueprint(api_bp, url_prefix='/api')
 
 with app.app_context():
-    mongo.db.links.create_index("url", unique=True)
+    mongo.db.links.create_index([("user_id", 1), ("url", 1)], unique=True)
     mongo.db.links.create_index([("tags", 1)])
 
 
