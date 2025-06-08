@@ -6,7 +6,7 @@ export default function DetailPage() {
   // gets _id from the parameters of the url - /detail/:_id
   const { _id } = useParams();
 
-  // Define the type for your data
+  //  the type for your data
   interface LinkData {
     _id: string;
     title: string;
@@ -30,13 +30,21 @@ export default function DetailPage() {
     try {
       const res = await fetch(`http://localhost:5000/api/link/${_id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(updatedData),
       });
 
       if (res.ok) {
         const updatedData = await fetch(
-          `http://localhost:5000/api/links/${_id}`
+          `http://localhost:5000/api/links/${_id}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
         );
         const updatedJson = await updatedData.json();
         setData(updatedJson);
@@ -51,7 +59,12 @@ export default function DetailPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/links/${_id}`);
+        const res = await fetch(`http://localhost:5000/api/links/${_id}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
         const json = await res.json();
         setData(json);
       } catch (err) {
@@ -65,8 +78,21 @@ export default function DetailPage() {
   // calls summary endpoint which summarises and saves the data to the database, and fetches the latest data from another endpoint and updating the data using setData() with the latest data.
   const handleSummary = async () => {
     try {
-      await fetch(`http://localhost:5000/api/analyze/${_id}`);
-      const updatedData = await fetch(`http://localhost:5000/api/links/${_id}`);
+      await fetch(`http://localhost:5000/api/analyze/${_id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const updatedData = await fetch(
+        `http://localhost:5000/api/links/${_id}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
       const updatedJson = await updatedData.json();
       setData(updatedJson);
     } catch (error) {

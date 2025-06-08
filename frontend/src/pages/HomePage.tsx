@@ -1,26 +1,62 @@
 ﻿import React, { useState, useEffect } from "react";
 import Card from "../components/Card.js";
-import { Button } from "@/components/ui/button";
 import CloseIcon from "../assets/Close_L.svg";
+import {
+  useAuth,
+  useUser,
+  SignOutButton,
+  UserProfile,
+  SignedIn,
+} from "@clerk/clerk-react";
+import { Button } from "@/components/ui/button.js";
+import { useNavigate } from "react-router-dom";
 
 export default function HomePage() {
   // state for storing data
   const [data, setData] = useState([]);
 
+  // provides access to the current user's authentication state and methods to manage the active session.
+  const { getToken } = useAuth();
+
+  // this hook sends the jwt to the extention. content.js --> background.js --> local storage
+  useEffect(() => {
+    const sendJWTToExtension = async () => {
+      try {
+        const token = await getToken();
+        if (!token) {
+          console.warn("No token found");
+          return;
+        }
+        window.postMessage({ type: "FROM_PAGE", token }, "*");
+      } catch (error) {
+        console.error("Error getting clerk token", error);
+      }
+    };
+    sendJWTToExtension();
+  }, [getToken]);
+
+  // for page navigation
+  const navigate = useNavigate();
+
+  // provides access to the current user's User object
+  const { user } = useUser();
+
   // calling the endpoint which fetches all links
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/links");
+        const token = await getToken();
+        const response = await fetch("http://localhost:5000/api/links", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         const results = await response.json();
 
-        if (response.status === 200) {
+        if (response.ok) {
           setData(results.links);
-          if (results.links.length === 0) {
-            setError(results.message || "No posts");
-          } else {
-            setError("");
-          }
+        } else {
+          setError(results.message || "Error fetching links");
         }
       } catch (error) {
         setError("Something went wrong. Try again after sometime.");
@@ -30,13 +66,16 @@ export default function HomePage() {
     fetchData();
   }, []);
 
+  // ? this must be a protected route?
   // handling delete
   const handleDelete = async (_id: string) => {
     try {
+      const token = getToken();
       const res = await fetch(`http://localhost:5000/api/links/${_id}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -82,6 +121,8 @@ export default function HomePage() {
   // ? idk if this is a good idea
   useEffect(() => {
     const fetchData = async () => {
+      const token = await getToken();
+
       const queryParams = tagSearch
         .map((tag) => `tags=${encodeURIComponent(tag)}`)
         .join("&");
@@ -91,16 +132,12 @@ export default function HomePage() {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       });
       const result = await res.json();
-      if (res.status == 200) {
+      if (res.ok) {
         setData(result.links);
-        if (result.links.length === 0) {
-          setError(result.message || "No Posts found.");
-        } else {
-          setError("");
-        }
       } else {
         setError("Something went wrong");
       }
@@ -130,7 +167,24 @@ export default function HomePage() {
             placeholder="search for links"
           />
         </form>
-        {/* <Button onClick={handleSearchSubmit}>Search</Button> */}
+        <SignOutButton>
+          <Button
+            onClick={() => {
+              window.postMessage({ type: "SIGN_OUT" }, "*");
+            }}>
+            Sign out
+          </Button>
+        </SignOutButton>
+
+        <Button
+          onClick={() => {
+            navigate("/profile");
+          }}>
+          View Profile
+        </Button>
+      </div>
+      <div className="p-5">
+        <h1 className="text-2xl font-bold">Hello {user?.fullName} </h1>
       </div>
       <div>
         <ul className="flex">
@@ -158,7 +212,7 @@ export default function HomePage() {
       </div>
       <div className="p-10 flex justify-evenly items-center flex-wrap">
         {error && <div className="text-gray-500 text-center mt-4">{error}</div>}
-        {data.length > 0 && (
+        {data && (
           <>
             {data.map((item: any) => (
               <Card
