@@ -1,19 +1,20 @@
 ﻿import React, { useState, useEffect } from "react";
 import Card from "../components/Card.js";
-import CloseIcon from "../assets/Close_L.svg";
-import {
-  useAuth,
-  useUser,
-  SignOutButton,
-  UserProfile,
-  SignedIn,
-} from "@clerk/clerk-react";
+import { useAuth, useUser, SignOutButton } from "@clerk/clerk-react";
 import { Button } from "@/components/ui/button.js";
 import { useNavigate } from "react-router-dom";
+import SearchBar from "@/components/SearchBar.js";
+import LoadingSpinner from "@/components/LoadingSpinner.js";
 
 export default function HomePage() {
   // state for storing data
   const [data, setData] = useState([]);
+  const [error, setError] = useState<string>("");
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  // this is managed SearchBar component
+  const [tagSearch, setTagSearch] = useState<string[]>([]);
 
   // provides access to the current user's authentication state and methods to manage the active session.
   const { getToken } = useAuth();
@@ -44,10 +45,12 @@ export default function HomePage() {
   // calling the endpoint which fetches all links
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true);
       try {
         const token = await getToken();
         const response = await fetch("http://localhost:5000/api/links", {
           headers: {
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         });
@@ -60,6 +63,8 @@ export default function HomePage() {
         }
       } catch (error) {
         setError("Something went wrong. Try again after sometime.");
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -90,83 +95,15 @@ export default function HomePage() {
     }
   };
 
-  // states for search and errors
-  const [searchInput, setSearchInput] = useState<string>("");
-  const [tagSearch, setTagSearch] = useState<string[]>([]);
-  const [error, setError] = useState<string>("");
-
-  // the words which starts with '#' is considered as tag and used for searching
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (value.endsWith(" ")) {
-      if (value.startsWith("#")) {
-        const trimmed_value = value.trim();
-
-        // making sure every tag is unique
-        if (trimmed_value && !tagSearch.includes(trimmed_value.toLowerCase())) {
-          setTagSearch([
-            ...tagSearch,
-            trimmed_value.substring(1).toLowerCase(),
-          ]); // removing the '#'
-        }
-        setSearchInput("");
-      } else {
-        setSearchInput(value);
-      }
-    } else {
-      setSearchInput(value);
-    }
-  };
-
-  // ? idk if this is a good idea
-  useEffect(() => {
-    const fetchData = async () => {
-      const token = await getToken();
-
-      const queryParams = tagSearch
-        .map((tag) => `tags=${encodeURIComponent(tag)}`)
-        .join("&");
-      const url = `http://localhost:5000/api/links?${queryParams}`;
-
-      const res = await fetch(url, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const result = await res.json();
-      if (res.ok) {
-        setData(result.links);
-      } else {
-        setError("Something went wrong");
-      }
-    };
-
-    fetchData();
-  }, [tagSearch]);
-
-  const handleTagDelete = (item: string) => {
-    const filtered = tagSearch.filter((tags) => tags !== item);
-    setTagSearch(filtered);
-  };
-
   return (
     <>
       <div className="flex mt-6 mr-6 gap-5 justify-end place-items-center">
-        <form action="">
-          <label htmlFor="search">Search</label>
-          <br />
-          <input
-            className="border-2 w-72 h-10 p-4 text-md mb-2"
-            type="search"
-            name="search"
-            id="search"
-            value={searchInput}
-            onChange={handleSearch}
-            placeholder="search for links"
-          />
-        </form>
+        <SearchBar
+          setError={setError}
+          setSearchData={setData}
+          tags={tagSearch}
+          setTag={setTagSearch}
+        />
         <SignOutButton>
           <Button
             onClick={() => {
@@ -186,32 +123,13 @@ export default function HomePage() {
       <div className="p-5">
         <h1 className="text-2xl font-bold">Hello {user?.fullName} </h1>
       </div>
-      <div>
-        <ul className="flex">
-          {tagSearch.length > 0
-            ? tagSearch.map((item, index) => (
-                <li
-                  className="bg-blue-500 text-xs text-white px-3 py-1 rounded-full mr-1 flex items-center gap-2"
-                  key={index}>
-                  {item}
-                  <button
-                    type="button"
-                    onClick={() => handleTagDelete(item)}
-                    title="Remove tag">
-                    <img
-                      width="14px"
-                      height="14px"
-                      src={CloseIcon}
-                      alt="Remove tag"
-                    />
-                  </button>
-                </li>
-              ))
-            : null}
-        </ul>
-      </div>
-      <div className="p-10 flex justify-evenly items-center flex-wrap">
+      <div className="p-10 flex gap-0.5 justify-evenly items-center flex-wrap">
         {error && <div className="text-gray-500 text-center mt-4">{error}</div>}
+        {isLoading && (
+          <div className="flex items-center justify-center min-h-screen">
+            <LoadingSpinner variant="ring" size="xl" />
+          </div>
+        )}
         {data && (
           <>
             {data.map((item: any) => (

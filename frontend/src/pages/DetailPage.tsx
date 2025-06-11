@@ -1,7 +1,8 @@
 ﻿import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import UpdateForm from "../components/UpdateForm";
-
+import Folder from "@/components/Folder";
+import LoadingSpinner from "@/components/LoadingSpinner";
 export default function DetailPage() {
   // gets _id from the parameters of the url - /detail/:_id
   const { _id } = useParams();
@@ -14,7 +15,7 @@ export default function DetailPage() {
     tags: string[];
     note: string;
     summary: string;
-    [key: string]: any; // for any additional properties
+    folder_id: string;
   }
 
   // state for data
@@ -102,7 +103,11 @@ export default function DetailPage() {
 
   // if no data is fetched
   if (!data) {
-    return <div className="p-4">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingSpinner variant="ring" size="xl" />
+      </div>
+    );
   }
 
   return (
@@ -116,6 +121,7 @@ export default function DetailPage() {
             href={data.url}>
             {data.url}
           </a>
+          <Folder linkId={_id} linkCollectionId={data.folder_id} />
         </div>
         {data.summary == "" ? (
           <button

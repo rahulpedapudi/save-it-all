@@ -46,7 +46,7 @@ function Card(props: CardProps) {
                   onClick={() => props.handleTagClick(item)}
                   type="button">
                   {item}
-                </button>
+                </button> 
               </li>
             ))}
           </ul>
