@@ -5,6 +5,16 @@ import { Button } from "@/components/ui/button.js";
 import { useNavigate } from "react-router-dom";
 import SearchBar from "@/components/SearchBar.js";
 import LoadingSpinner from "@/components/LoadingSpinner.js";
+import { useCollections } from "@/hooks/useCollection.js";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function HomePage() {
   // state for storing data
@@ -15,6 +25,10 @@ export default function HomePage() {
 
   // this is managed SearchBar component
   const [tagSearch, setTagSearch] = useState<string[]>([]);
+
+  const [selectedCollection, setSelectedCollection] = useState("all");
+
+  const { data: collections, isLoading: collectionsLoading } = useCollections();
 
   // provides access to the current user's authentication state and methods to manage the active session.
   const { getToken } = useAuth();
@@ -119,6 +133,21 @@ export default function HomePage() {
           }}>
           View Profile
         </Button>
+        <Select
+          value={selectedCollection}
+          onValueChange={setSelectedCollection}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Filter by collection" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Items</SelectItem>
+            {collections?.map((collection: any) => (
+              <SelectItem key={collection._id} value={collection._id}>
+                {collection.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <div className="p-5">
         <h1 className="text-2xl font-bold">Hello {user?.fullName} </h1>

@@ -20,8 +20,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@clerk/clerk-react";
-import LoadingSpinner from "./LoadingSpinner";
-
+import { useCollections } from "@/hooks/useCollection";
+import { useQueryClient } from "@tanstack/react-query";
+import { useCreateCollection } from "@/hooks/useCreateCollection";
+import { useAssignCollection } from "@/hooks/useAssignCollection";
 interface FolderProps {
   linkId: string | undefined;
   linkCollectionId: string | null;
@@ -42,7 +44,12 @@ export default function Folder({ linkId, linkCollectionId }: FolderProps) {
   const [selectedCollection, setSelectedCollection] = useState("");
 
   // todo: i should retrieve these from the backend db
-  const [collections, setCollections] = useState<CollectionData[]>([]);
+  // const [collections, setCollections] = useState<CollectionData[]>([]);
+  const { data: collections = [] } = useCollections();
+  const createCollection = useCreateCollection();
+  const assignCollection = useAssignCollection();
+
+  const queryClient = useQueryClient();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState("");
@@ -51,86 +58,77 @@ export default function Folder({ linkId, linkCollectionId }: FolderProps) {
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const fetchCollections = async () => {
-    if (isLoading) return;
-    setIsLoading(true);
+  const [isSaving, setIsSaving] = useState(false);
 
-    try {
-      const token = await getToken();
-      if (!token) {
-        setError("Authentication required");
-        return;
-      }
+  // const fetchCollections = async () => {
+  //   if (isLoading) return;
+  //   setIsLoading(true);
 
-      const response = await fetch("http://localhost:5000/collections/get", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+  //   try {
+  //     const token = await getToken();
+  //     if (!token) {
+  //       setError("Authentication required");
+  //       return;
+  //     }
 
-      const results = await response.json();
+  //     const response = await fetch("http://localhost:5000/collections/get", {
+  //       method: "GET",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //     });
 
-      if (response.ok && results.collections) {
-        setCollections(results.collections);
+  //     const results = await response.json();
 
-        if (linkCollectionId) {
-          const found = results.collections.find(
-            (c: CollectionData) => c._id === linkCollectionId
-          );
-          setSelectedCollection(found ? found.name : "");
-        }
-        setError("");
-      } else {
-        setError(results.message || "No Collections");
-      }
-    } catch (error) {
-      console.error("Fetch Error: ", error);
-      setError("Network Error");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  //     if (response.ok && results.collections) {
+  //       setCollections(results.collections);
+
+  //       if (linkCollectionId) {
+  //         const found = results.collections.find(
+  //           (c: CollectionData) => c._id === linkCollectionId
+  //         );
+  //         setSelectedCollection(found ? found.name : "");
+  //       }
+  //       setError("");
+  //     } else {
+  //       setError(results.message || "No Collections");
+  //     }
+  //   } catch (error) {
+  //     console.error("Fetch Error: ", error);
+  //     setError("Network Error");
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   useEffect(() => {
-    fetchCollections();
-  }, [linkCollectionId]);
+    // fetchCollections();
+    if (collections.length > 0 && linkCollectionId) {
+      const found = collections.find(
+        (c: CollectionData) => c._id === linkCollectionId
+      );
+      setSelectedCollection(found ? found.name : "");
+    }
+  }, [collections, linkCollectionId]);
 
   const handleCreateCollection = async () => {
     const trimmedName = newCollectionName.trim();
     if (trimmedName) {
       try {
-        const token = await getToken();
+        setIsSaving(true);
+        const resoponse = await createCollection.mutateAsync({
+          name: trimmedName,
+        });
 
-        const response = await fetch(
-          "http://localhost:5000/collections/create",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ name: trimmedName }),
-          }
-        );
+        if (resoponse.collection && linkId) {
+          const isAssigned = await assignCollection.mutateAsync({
+            linkId: linkId,
+            collectionId: resoponse._id,
+          });
 
-        const result = await response.json();
-        if (response.ok && result.collection) {
-          const assign = await fetch(
-            `http://localhost:5000/api/link/${linkId}/assign-folder`,
-            {
-              method: "PATCH",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({ folder_id: result.collection._id }),
-            }
-          );
-
-          if (assign.ok) {
-            await fetchCollections();
+          if (isAssigned) {
+            await queryClient.invalidateQueries({ queryKey: ["collections"] });
             setSelectedCollection(trimmedName);
             setNewCollectionName("");
             setIsDialogOpen(false);
@@ -143,6 +141,8 @@ export default function Folder({ linkId, linkCollectionId }: FolderProps) {
       } catch (error) {
         console.error("Create Collection error: ", error);
         setError("Failed to create Collection");
+      } finally {
+        setIsSaving(false);
       }
     }
   };
@@ -150,31 +150,30 @@ export default function Folder({ linkId, linkCollectionId }: FolderProps) {
   const handleCollectionChange = async (collectionName: string) => {
     setSelectedCollection(collectionName);
 
-    const selected = collections.find((c) => c.name === collectionName);
+    const selected = collections.find(
+      (c: CollectionData) => c.name === collectionName
+    );
     if (!selected) return;
 
     try {
       const token = await getToken();
 
-      const response = await fetch(
-        `http://localhost:5000/api/link/${linkId}/assign-folder`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ folder_id: selected._id }),
-        }
-      );
+      const isAssigned = await assignCollection.mutateAsync({
+        linkId: linkId,
+        collectionId: selected._id,
+      });
 
-      if (!response.ok) {
-        const found = collections.find((c) => c._id === linkCollectionId);
+      if (!isAssigned) {
+        const found = collections.find(
+          (c: CollectionData) => c._id === linkCollectionId
+        );
         setSelectedCollection(found ? found.name : "");
         setError("Failed to assign to collection");
       }
     } catch (error) {
-      const found = collections.find((c) => c._id === linkCollectionId);
+      const found = collections.find(
+        (c: CollectionData) => c._id === linkCollectionId
+      );
       setSelectedCollection(found ? found.name : "");
       setError("Network error");
     }
@@ -196,8 +195,8 @@ export default function Folder({ linkId, linkCollectionId }: FolderProps) {
             <SelectLabel>Your Collections</SelectLabel>
 
             {collections &&
-              collections.map((item, index) => (
-                <SelectItem key={index} value={item.name}>
+              collections.map((item: CollectionData) => (
+                <SelectItem key={item._id} value={item.name}>
                   {item.name.charAt(0).toUpperCase() + item.name.slice(1)}
                   {/* {item.name} */}
                 </SelectItem>
@@ -212,6 +211,7 @@ export default function Folder({ linkId, linkCollectionId }: FolderProps) {
           </SelectGroup>
         </SelectContent>
       </Select>
+      {error && <h1>{error}</h1>}
 
       {/* Dialog Outside Select */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -237,7 +237,9 @@ export default function Folder({ linkId, linkCollectionId }: FolderProps) {
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleCreateCollection}>Save</Button>
+            <Button disabled={isSaving} onClick={handleCreateCollection}>
+              Save
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
