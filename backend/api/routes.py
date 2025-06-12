@@ -6,7 +6,6 @@ from tasks import summarization
 from tasks import content_extract
 from werkzeug.exceptions import BadRequest, NotFound
 from urllib.parse import urlparse
-
 from .auth import require_clerk_auth
 
 # blueprint
@@ -40,6 +39,7 @@ def save_data():
         "save_type": data['save_type'],
         "selected_text": data.get('selected_text', ""),
         "is_favorite": False,
+        "folder_id": "",
         "created_at": datetime.now().isoformat()
     }
 
@@ -83,6 +83,8 @@ def get_links():
     # Convert _id to string
     for link in links:
         link["_id"] = str(link["_id"])
+        if "folder_id" in link:  # converting the folder_id to string for easier comparisions
+            link["folder_id"] = str(link["folder_id"])
 
     return jsonify({"links": links}), 200
 
@@ -129,6 +131,8 @@ def handle_link(id):
             {"_id": ObjectId(id)})
         if link:
             link["_id"] = str(link["_id"])
+            if "folder_id" in link:
+                link["folder_id"] = str(link["folder_id"])
             return jsonify(link)
         return jsonify({"error": "Link not Found!"}), 404
     if request.method == 'DELETE':
@@ -158,3 +162,27 @@ def update_link(id):
         return jsonify({"message": "Document updated successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+
+
+# route to update the folder_id of a link after assigning it to a folder
+@api_bp.route("/link/<id>/assign-folder", methods=["PATCH"])
+@require_clerk_auth
+def assign_folder(id):
+    mongo = current_app.mongo
+    user_id = request.user_id
+    data = request.get_json()
+
+    folder_id = data.get("folder_id")
+    if not folder_id:
+        return jsonify({"error": "Folder ID required"}), 400
+
+    try:
+        result = mongo.db.links.update_one(
+            {"_id": ObjectId(id), "user_id": user_id},
+            {"$set": {"folder_id": ObjectId(folder_id)}})
+        if result.modified_count:
+            return jsonify({"status": "Updated"}), 200
+        else:
+            return jsonify({"status": "no change"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
