@@ -3,10 +3,11 @@ import { useAuth } from "@clerk/clerk-react";
 import TagList from "./TagList";
 
 interface SearchBarProps {
-  setSearchData: (value: React.SetStateAction<never[]>) => void;
+  setSearchData: React.Dispatch<React.SetStateAction<any[]>>;
   setError: (value: React.SetStateAction<string>) => void;
   tags: string[];
   setTag: React.Dispatch<React.SetStateAction<string[]>>;
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export default function SearchBar({
@@ -14,6 +15,7 @@ export default function SearchBar({
   setError,
   tags,
   setTag,
+  setLoading,
 }: SearchBarProps) {
   const { getToken } = useAuth();
 
@@ -47,6 +49,7 @@ export default function SearchBar({
 
   useEffect(() => {
     const fetchData = async () => {
+      // setLoading((prev) => !prev);
       const token = await getToken();
 
       const queryParams = tags
@@ -67,6 +70,7 @@ export default function SearchBar({
       } else {
         setError("Something went wrong");
       }
+      // setLoading((prev) => !prev);
     };
 
     fetchData();

@@ -1,8 +1,10 @@
 ﻿import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import UpdateForm from "../components/UpdateForm";
-import Folder from "@/components/Folder";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { Button } from "@/components/ui/button";
+import ItemDetail from "@/components/ItemDetail";
+import NoteDetail from "@/components/NoteDetail";
 export default function DetailPage() {
   // gets _id from the parameters of the url - /detail/:_id
   const { _id } = useParams();
@@ -16,12 +18,16 @@ export default function DetailPage() {
     note: string;
     summary: string;
     folder_id: string;
+    content_type: string;
+    content: string;
   }
 
   // state for data
   const [data, setData] = useState<LinkData | null>(null);
 
   const [isUpdateClicked, setIsUpdateClicked] = useState(false);
+
+  const [noteContent, setNoteContent] = useState<string>("");
 
   const handleClick = () => {
     setIsUpdateClicked((prev) => !prev);
@@ -68,6 +74,7 @@ export default function DetailPage() {
         });
         const json = await res.json();
         setData(json);
+        setNoteContent(json.content);
       } catch (err) {
         console.error("Error fetching data:", err);
       }
@@ -111,55 +118,34 @@ export default function DetailPage() {
   }
 
   return (
-    <div className="p-4">
-      <div className="flex justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">{data.title}</h1>
-          <a
-            className="underline text-blue-400"
-            target="_blank"
-            href={data.url}>
-            {data.url}
-          </a>
-          <Folder linkId={_id} linkCollectionId={data.folder_id} />
-        </div>
-        {data.summary == "" ? (
-          <button
-            onClick={handleSummary}
-            className="group group-hover:before:duration-500 group-hover:after:duration-500 after:duration-500 hover:border-rose-300 hover:before:[box-shadow:_20px_20px_20px_30px_#a21caf] duration-500 before:duration-500 hover:duration-500 underline underline-offset-2 hover:after:-right-8 hover:before:right-12 hover:before:-bottom-8 hover:before:blur hover:underline hover:underline-offset-4  origin-left hover:decoration-2 hover:text-rose-300 relative bg-neutral-800 h-16 w-64 border text-left p-3 text-gray-50 text-base font-bold rounded-lg  overflow-hidden  before:absolute before:w-12 before:h-12 before:content[''] before:right-1 before:top-1 before:z-10 before:bg-violet-500 before:rounded-full before:blur-lg  after:absolute after:z-10 after:w-20 after:h-20 after:content['']  after:bg-rose-300 after:right-8 after:top-3 after:rounded-full after:blur-lg">
-            Summarise
-          </button>
-        ) : null}
-      </div>
-      <div className="m-4 flex gap-8 rounded-md">
-        {!data || !data.tags || data.tags.length === 0 ? null : (
-          <ul className="flex gap-2 flex-wrap">
-            {data.tags.map((item, index) => (
-              <li
-                key={index}
-                className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm">
-                {item}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-      <div>{data.note}</div>
-      <div className="border h-80 w-auto my-8 flex justify-center items-center">
-        {data.summary ? (
-          <h1 className="text-2xl font-bold">{data.summary}</h1>
-        ) : (
-          <h1 className="text-lg text-gray-500">
-            Click "Summarize" to generate summary
-          </h1>
-        )}
-      </div>
-      <button
-        onClick={handleClick}
-        className="rounded-md bg-slate-800 py-2 px-4 border border-transparent text-center text-sm text-white transition-all shadow-md hover:shadow-lg focus:bg-slate-700 focus:shadow-none active:bg-slate-700 hover:bg-slate-700 active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none ml-2"
-        type="button">
+    <div className="px-36 py-10">
+      {data.content_type === "note" && (
+        <NoteDetail
+          _id={data._id}
+          title={data.title}
+          folder_id={data.folder_id}
+          tags={data.tags}
+          content={noteContent}
+          setContent={setNoteContent}
+        />
+      )}
+
+      {data.content_type === "" && (
+        <ItemDetail
+          _id={data._id}
+          title={data.title}
+          url={data.url}
+          folder_id={data.folder_id}
+          tags={data.tags}
+          note={data.note}
+          handleSummary={handleSummary}
+          summary={data.summary}
+        />
+      )}
+
+      <Button onClick={handleClick} type="button">
         Update
-      </button>
+      </Button>
       {isUpdateClicked ? (
         <UpdateForm
           initialData={data}

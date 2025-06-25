@@ -1,11 +1,14 @@
 ﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Button } from "./ui/button";
+import { Heart } from "lucide-react";
 
 type CardProps = {
   _id: string;
   title: string;
   url: string;
   tags: string[];
+  noteContent?: string;
   handleDelete: (_id: string) => Promise<void>;
   handleTagClick: (tag: string) => void;
 };
@@ -34,6 +37,7 @@ function Card(props: CardProps) {
           {props.title}
         </h1>
       </div>
+      <p className="line-clamp-4 overflow-hidden ">{props.noteContent}</p>
       <div>
         {props.tags && (
           <ul className="flex flex-wrap">
@@ -46,33 +50,32 @@ function Card(props: CardProps) {
                   onClick={() => props.handleTagClick(item)}
                   type="button">
                   {item}
-                </button> 
+                </button>
               </li>
             ))}
           </ul>
         )}
       </div>
-      <button
-        onClick={handleOpen}
-        className="absolute right-2 bottom-2 inline-block  text-black cursor-pointer items-center justify-center rounded-md border-[1.58px] border-zinc-600  px-5 py-3 font-medium shadow-md transition-all duration-300 hover:[transform:translateY(-.335rem)] hover:shadow-xl">
-        Open
-      </button>
-      <button
-        onClick={() => setShowConfirm(true)}
-        className="absolute right-24 bottom-2 inline-block  text-black cursor-pointer items-center justify-center rounded-md border-[1.58px] border-zinc-600  px-5 py-3 font-medium shadow-md transition-all duration-300 hover:[transform:translateY(-.335rem)] hover:shadow-xl">
-        Delete
-      </button>
+      <div className="absolute bottom-4 right-2">
+        <div className="flex gap-2 items-center">
+          <Button onClick={() => setShowConfirm(true)}> Delete</Button>
+          <Button onClick={handleOpen}> Open</Button>
+          <Button onClick={() => {}}>
+            <Heart />
+          </Button>
+        </div>
+      </div>
       {showConfirm && (
         <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded shadow-lg">
             <p className="mb-4">Are you sure you want to delete this? </p>
             <div className="flex justify-end space-x-4">
-              <button
+              <Button
                 onClick={() => setShowConfirm(false)}
                 className="px-4 py-2 border">
                 Cancel
-              </button>
-              <button onClick={confirmDelete}>Delete</button>
+              </Button>
+              <Button onClick={confirmDelete}>Delete</Button>
             </div>
           </div>
         </div>

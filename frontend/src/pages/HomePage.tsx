@@ -1,34 +1,55 @@
-﻿import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect, useMemo } from "react";
 import Card from "../components/Card.js";
 import { useAuth, useUser, SignOutButton } from "@clerk/clerk-react";
 import { Button } from "@/components/ui/button.js";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import SearchBar from "@/components/SearchBar.js";
 import LoadingSpinner from "@/components/LoadingSpinner.js";
 import { useCollections } from "@/hooks/useCollection.js";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import AddNote from "@/components/AddNote.js";
+import { useLinks } from "@/hooks/useLinks.js";
+import { useDeleteLink } from "@/hooks/useDeleteLink.js";
+import { useQueryClient } from "@tanstack/react-query";
+
+interface CollectionData {
+  _id: string;
+  user_id: string;
+  name: string;
+  created_at: Date;
+  color: string;
+}
+
+// TODO: migrate to tanstack query
 
 export default function HomePage() {
-  // state for storing data
-  const [data, setData] = useState([]);
-  const [error, setError] = useState<string>("");
+  const queryClient = useQueryClient();
 
-  const [isLoading, setIsLoading] = useState(false);
+  const deleteLink = useDeleteLink();
+
+  // state for storing data
+  // const [data, setData] = useState<any[]>([]);
+  const { data: data, isPending: isLoading, isError: error } = useLinks();
+  // const [error, setError] = useState<string>("");
+
+  // const [isLoading, setIsLoading] = useState(false);
 
   // this is managed SearchBar component
   const [tagSearch, setTagSearch] = useState<string[]>([]);
 
-  const [selectedCollection, setSelectedCollection] = useState("all");
+  const { data: collections = [] } = useCollections();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const collectionFromUrl = searchParams.get("collection") || "all";
 
-  const { data: collections, isLoading: collectionsLoading } = useCollections();
+  // Use that as your initial state
+  const [selectedCollection, setSelectedCollection] =
+    useState(collectionFromUrl);
 
   // provides access to the current user's authentication state and methods to manage the active session.
   const { getToken } = useAuth();
@@ -50,74 +71,47 @@ export default function HomePage() {
     sendJWTToExtension();
   }, [getToken]);
 
+  useEffect(() => {
+    const urlValue = searchParams.get("collection") || "all";
+    setSelectedCollection(urlValue);
+  }, [searchParams]);
+
   // for page navigation
   const navigate = useNavigate();
 
   // provides access to the current user's User object
   const { user } = useUser();
 
-  // calling the endpoint which fetches all links
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const token = await getToken();
-        const response = await fetch("http://localhost:5000/api/links", {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const results = await response.json();
-
-        if (response.ok) {
-          setData(results.links);
-        } else {
-          setError(results.message || "Error fetching links");
-        }
-      } catch (error) {
-        setError("Something went wrong. Try again after sometime.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
   // ? this must be a protected route?
   // handling delete
   const handleDelete = async (_id: string) => {
-    try {
-      const token = getToken();
-      const res = await fetch(`http://localhost:5000/api/links/${_id}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      // updating the UI by filtering out the item that has been deleted currently.
-      if (res.ok) {
-        setData((prev: any) => prev.filter((item: any) => item._id !== _id));
-      } else {
-        console.error("Delete Failed");
-      }
-    } catch (error) {
-      console.error(error);
+    const isdeleted = await deleteLink.mutateAsync({ id: _id });
+    if (isdeleted) {
+      console.log("Deleted");
     }
   };
+
+  const filteredData = useMemo(() => {
+    if (selectedCollection === "all") return data;
+    return data.filter((item: any) => item?.folder_id === selectedCollection);
+  }, [data, selectedCollection, collections]);
 
   return (
     <>
       <div className="flex mt-6 mr-6 gap-5 justify-end place-items-center">
-        <SearchBar
+        <Button
+          onClick={() => {
+            navigate("/");
+          }}>
+          Go to Home
+        </Button>
+        {/* <SearchBar
           setError={setError}
           setSearchData={setData}
           tags={tagSearch}
           setTag={setTagSearch}
-        />
+          setLoading={setIsLoading}
+        /> */}
         <SignOutButton>
           <Button
             onClick={() => {
@@ -135,7 +129,10 @@ export default function HomePage() {
         </Button>
         <Select
           value={selectedCollection}
-          onValueChange={setSelectedCollection}>
+          onValueChange={(value) => {
+            setSelectedCollection(value);
+            setSearchParams({ collection: value });
+          }}>
           <SelectTrigger className="w-[200px]">
             <SelectValue placeholder="Filter by collection" />
           </SelectTrigger>
@@ -143,7 +140,8 @@ export default function HomePage() {
             <SelectItem value="all">All Items</SelectItem>
             {collections?.map((collection: any) => (
               <SelectItem key={collection._id} value={collection._id}>
-                {collection.name}
+                {collection.name.charAt(0).toUpperCase() +
+                  collection.name.slice(1)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -152,6 +150,14 @@ export default function HomePage() {
       <div className="p-5">
         <h1 className="text-2xl font-bold">Hello {user?.fullName} </h1>
       </div>
+      <div className="pl-5">
+        <p>Total Links: {Array.isArray(data) ? data.length : 0}</p>
+        <p>
+          Filtered Links:{" "}
+          {Array.isArray(filteredData) ? filteredData.length : 0}
+        </p>
+        <p>Selected Collection: {selectedCollection}</p>
+      </div>
       <div className="p-10 flex gap-0.5 justify-evenly items-center flex-wrap">
         {error && <div className="text-gray-500 text-center mt-4">{error}</div>}
         {isLoading && (
@@ -159,9 +165,10 @@ export default function HomePage() {
             <LoadingSpinner variant="ring" size="xl" />
           </div>
         )}
-        {data && (
+        {!isLoading && <AddNote />}
+        {filteredData && !isLoading && (
           <>
-            {data.map((item: any) => (
+            {filteredData.map((item: any) => (
               <Card
                 key={item._id}
                 _id={item._id}
@@ -172,6 +179,7 @@ export default function HomePage() {
                       : item.selected_text
                     : item.title
                 }
+                noteContent={item?.content}
                 url={item.url}
                 tags={item.tags}
                 handleTagClick={(item) => {

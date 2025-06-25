@@ -25,8 +25,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCreateCollection } from "@/hooks/useCreateCollection";
 import { useAssignCollection } from "@/hooks/useAssignCollection";
 interface FolderProps {
-  linkId: string | undefined;
-  linkCollectionId: string | null;
+  linkId?: string | undefined;
+  linkCollectionId?: string | null;
 }
 
 export default function Folder({ linkId, linkCollectionId }: FolderProps) {
@@ -44,7 +44,6 @@ export default function Folder({ linkId, linkCollectionId }: FolderProps) {
   const [selectedCollection, setSelectedCollection] = useState("");
 
   // todo: i should retrieve these from the backend db
-  // const [collections, setCollections] = useState<CollectionData[]>([]);
   const { data: collections = [] } = useCollections();
   const createCollection = useCreateCollection();
   const assignCollection = useAssignCollection();
@@ -60,50 +59,7 @@ export default function Folder({ linkId, linkCollectionId }: FolderProps) {
 
   const [isSaving, setIsSaving] = useState(false);
 
-  // const fetchCollections = async () => {
-  //   if (isLoading) return;
-  //   setIsLoading(true);
-
-  //   try {
-  //     const token = await getToken();
-  //     if (!token) {
-  //       setError("Authentication required");
-  //       return;
-  //     }
-
-  //     const response = await fetch("http://localhost:5000/collections/get", {
-  //       method: "GET",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //     });
-
-  //     const results = await response.json();
-
-  //     if (response.ok && results.collections) {
-  //       setCollections(results.collections);
-
-  //       if (linkCollectionId) {
-  //         const found = results.collections.find(
-  //           (c: CollectionData) => c._id === linkCollectionId
-  //         );
-  //         setSelectedCollection(found ? found.name : "");
-  //       }
-  //       setError("");
-  //     } else {
-  //       setError(results.message || "No Collections");
-  //     }
-  //   } catch (error) {
-  //     console.error("Fetch Error: ", error);
-  //     setError("Network Error");
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
-
   useEffect(() => {
-    // fetchCollections();
     if (collections.length > 0 && linkCollectionId) {
       const found = collections.find(
         (c: CollectionData) => c._id === linkCollectionId
@@ -117,21 +73,20 @@ export default function Folder({ linkId, linkCollectionId }: FolderProps) {
     if (trimmedName) {
       try {
         setIsSaving(true);
-        const resoponse = await createCollection.mutateAsync({
+        const response = await createCollection.mutateAsync({
           name: trimmedName,
         });
 
-        if (resoponse.collection && linkId) {
+        if (response.collection && linkId) {
           const isAssigned = await assignCollection.mutateAsync({
             linkId: linkId,
-            collectionId: resoponse._id,
+            collectionId: response.collection._id,
           });
 
           if (isAssigned) {
             await queryClient.invalidateQueries({ queryKey: ["collections"] });
             setSelectedCollection(trimmedName);
             setNewCollectionName("");
-            setIsDialogOpen(false);
           } else {
             setError("Created Collection but failed to assign");
           }
@@ -142,6 +97,7 @@ export default function Folder({ linkId, linkCollectionId }: FolderProps) {
         console.error("Create Collection error: ", error);
         setError("Failed to create Collection");
       } finally {
+        setIsDialogOpen(false);
         setIsSaving(false);
       }
     }
@@ -157,7 +113,6 @@ export default function Folder({ linkId, linkCollectionId }: FolderProps) {
 
     try {
       const token = await getToken();
-
       const isAssigned = await assignCollection.mutateAsync({
         linkId: linkId,
         collectionId: selected._id,
@@ -198,7 +153,6 @@ export default function Folder({ linkId, linkCollectionId }: FolderProps) {
               collections.map((item: CollectionData) => (
                 <SelectItem key={item._id} value={item.name}>
                   {item.name.charAt(0).toUpperCase() + item.name.slice(1)}
-                  {/* {item.name} */}
                 </SelectItem>
               ))}
 
