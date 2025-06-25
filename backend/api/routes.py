@@ -36,7 +36,10 @@ def save_data():
         "domain": domain_name,
         "summary": "",
         "note": data['note'],
+        # save type stores whether is a full page save or a selected text save.
         "save_type": data['save_type'],
+        # content type stores whether the save is an artilce, note, video, tweet etc..
+        "content_type": "",  # TODO: store the respective content type when saving
         "selected_text": data.get('selected_text', ""),
         "is_favorite": False,
         "folder_id": "",
@@ -186,3 +189,34 @@ def assign_folder(id):
             return jsonify({"status": "no change"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@api_bp.route("/save-note", methods=["POST"])
+@require_clerk_auth
+def save_note():
+    mongo = current_app.mongo
+    user_id = request.user_id
+    data = request.get_json()
+    note = {
+        "user_id": user_id,
+        "title": data["title"] or "",
+        "content": data["content"],
+        "tags": ["notes "] + data["tags"] or ["notes"],
+        "content_type": "note",
+        "folder_id": data["folder_id"] or "",
+        "summary": "",
+        "is_favorite": False,
+        "created_at": datetime.now().isoformat(),
+    }
+
+    try:
+        result = mongo.db.links.insert_one(note)
+        print("Data Received: ", note)
+        return jsonify({
+            "status": "success",
+            "inserted_id": str(result.inserted_id),
+            "received": note
+        }), 201
+    except Exception as e:
+        print("Error: ", e)
+        return jsonify({"status": "failed", "error": str(e)})

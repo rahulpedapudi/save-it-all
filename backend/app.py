@@ -22,7 +22,11 @@ app.register_blueprint(collections_bp, url_prefix="/collections")
 
 
 with app.app_context():
-    mongo.db.links.create_index([("user_id", 1), ("url", 1)], unique=True)
+    mongo.db.links.create_index([("user_id", 1), ("url", 1)], unique=True, partialFilterExpression={
+        # Apply uniqueness if save_type is either of these values
+        "save_type": {"$in": ["full_page", "selected_text"]}
+    }
+    )
     mongo.db.links.create_index([("tags", 1)])
 
 

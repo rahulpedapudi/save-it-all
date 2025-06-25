@@ -44,4 +44,4 @@ def create_collection():
         return jsonify({"status": "Success", "collection": {"_id": str(result.inserted_id), "name": collection["name"]}}),  201
     except Exception as e:
         print("Error ", e)
-        return jsonify({"stauts": "Failed", "Error": e}), 500
+        return jsonify({"status": "Failed", "Error": e}), 500
