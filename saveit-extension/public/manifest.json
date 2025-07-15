@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Save It",
   "version": "1.0",
-  "permissions": ["scripting", "activeTab", "tabs"],
+  "permissions": ["scripting", "activeTab", "tabs", "storage"],
   "action": {
     "default_popup": "index.html"
   },
@@ -13,5 +13,9 @@
       "all_frames": true
     }
   ],
-  "host_permissions": ["<all_urls>"]
+  "background": {
+    "service_worker": "background.js"
+  },
+
+  "host_permissions": ["http://localhost:5000/*"]
 }

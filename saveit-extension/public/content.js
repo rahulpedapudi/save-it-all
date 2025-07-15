@@ -39,3 +39,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   return true; // Keeps message port open for async response
 });
+
+window.addEventListener("message", (event) => {
+  if (event.source !== window) return;
+
+  if (event.data.type === "FROM_PAGE") {
+    const token = event.data.token;
+    chrome.runtime.sendMessage({ type: "STORE_JWT", token });
+  }
+
+  if (event.data.type === "SIGN_OUT") {
+    chrome.runtime.sendMessage({ type: "CLEAR_JWT" });
+  }
+});
