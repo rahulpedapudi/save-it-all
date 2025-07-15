@@ -1,8 +1,8 @@
 ﻿import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@clerk/clerk-react";
+import { useAuth } from "../contexts/AuthContext";
 
 export const useAssignCollection = () => {
-  const { getToken } = useAuth();
+  const { token } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -13,7 +13,10 @@ export const useAssignCollection = () => {
       linkId: string | undefined;
       collectionId: string;
     }) => {
-      const token = await getToken();
+      if (!token) {
+        throw new Error("No authentication token");
+      }
+
       const assign = await fetch(
         `http://localhost:5000/api/link/${linkId}/assign-folder`,
         {

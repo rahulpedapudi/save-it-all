@@ -1,23 +1,20 @@
 ﻿import { useState, useEffect } from "react";
-import { RedirectToSignIn, useAuth } from "@clerk/clerk-react";
+import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 
-// just a simple landing page
-
 export default function LandingPage() {
-  const [showSignIn, setShowSignIn] = useState(false);
-  const { isSignedIn } = useAuth();
+  const { isAuthenticated, login } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (isSignedIn) {
+    if (isAuthenticated) {
       navigate("/");
     }
-  }, [isSignedIn, navigate]);
+  }, [isAuthenticated, navigate]);
 
-  if (showSignIn) {
-    return <RedirectToSignIn redirectUrl="/onboarding" />;
-  }
+  const handleSignIn = () => {
+    login();
+  };
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-[#f5f6fa]">
@@ -27,8 +24,8 @@ export default function LandingPage() {
       </p>
       <button
         className="px-8 py-3 text-base rounded-md border-none bg-blue-600 text-white cursor-pointer mt-6 hover:bg-blue-700 transition"
-        onClick={() => setShowSignIn(true)}>
-        Sign In
+        onClick={handleSignIn}>
+        Sign In with Google
       </button>
     </div>
   );

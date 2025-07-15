@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from "react";
-import { useAuth } from "@clerk/clerk-react";
+import { useAuth } from "../contexts/AuthContext";
 import TagList from "./TagList";
 
 interface SearchBarProps {
@@ -17,7 +17,7 @@ export default function SearchBar({
   setTag,
   setLoading,
 }: SearchBarProps) {
-  const { getToken } = useAuth();
+  const { token } = useAuth();
 
   // states for search and errors
   const [searchInput, setSearchInput] = useState<string>("");
@@ -49,8 +49,10 @@ export default function SearchBar({
 
   useEffect(() => {
     const fetchData = async () => {
-      // setLoading((prev) => !prev);
-      const token = await getToken();
+      if (!token) {
+        setError("No authentication token");
+        return;
+      }
 
       const queryParams = tags
         .map((tag) => `tags=${encodeURIComponent(tag)}`)
@@ -70,28 +72,23 @@ export default function SearchBar({
       } else {
         setError("Something went wrong");
       }
-      // setLoading((prev) => !prev);
     };
 
     fetchData();
-  }, [tags]);
+  }, [tags, token, setSearchData, setError]);
 
   return (
-    <>
-      <form action="">
-        <label htmlFor="search">Search</label>
-        <br />
-        <input
-          className="border-2 w-72 h-10 p-4 text-md mb-2"
-          type="search"
-          name="search"
-          id="search"
-          value={searchInput}
-          onChange={handleSearch}
-          placeholder="search for links"
-        />
-      </form>
-      <TagList tags={tags} handleTagDelete={handleTagDelete} />
-    </>
+    <div className="flex flex-col gap-2">
+      <input
+        type="text"
+        placeholder="Search or add tags with #"
+        value={searchInput}
+        onChange={handleSearch}
+        className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      {tags.length > 0 && (
+        <TagList tags={tags} handleTagDelete={handleTagDelete} />
+      )}
+    </div>
   );
 }

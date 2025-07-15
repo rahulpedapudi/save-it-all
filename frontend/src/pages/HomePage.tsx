@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect, useMemo } from "react";
 import Card from "../components/Card.js";
-import { useAuth, useUser, SignOutButton } from "@clerk/clerk-react";
+import { useAuth } from "../contexts/AuthContext";
 import { Button } from "@/components/ui/button.js";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import SearchBar from "@/components/SearchBar.js";
@@ -26,19 +26,12 @@ interface CollectionData {
   color: string;
 }
 
-// TODO: migrate to tanstack query
-
 export default function HomePage() {
   const queryClient = useQueryClient();
-
   const deleteLink = useDeleteLink();
 
   // state for storing data
-  // const [data, setData] = useState<any[]>([]);
   const { data: data, isPending: isLoading, isError: error } = useLinks();
-  // const [error, setError] = useState<string>("");
-
-  // const [isLoading, setIsLoading] = useState(false);
 
   // this is managed SearchBar component
   const [tagSearch, setTagSearch] = useState<string[]>([]);
@@ -52,24 +45,23 @@ export default function HomePage() {
     useState(collectionFromUrl);
 
   // provides access to the current user's authentication state and methods to manage the active session.
-  const { getToken } = useAuth();
+  const { token, logout, user } = useAuth();
 
-  // this hook sends the jwt to the extention. content.js --> background.js --> local storage
+  // this hook sends the jwt to the extension. content.js --> background.js --> local storage
   useEffect(() => {
     const sendJWTToExtension = async () => {
       try {
-        const token = await getToken();
         if (!token) {
           console.warn("No token found");
           return;
         }
         window.postMessage({ type: "FROM_PAGE", token }, "*");
       } catch (error) {
-        console.error("Error getting clerk token", error);
+        console.error("Error getting token", error);
       }
     };
     sendJWTToExtension();
-  }, [getToken]);
+  }, [token]);
 
   useEffect(() => {
     const urlValue = searchParams.get("collection") || "all";
@@ -79,10 +71,6 @@ export default function HomePage() {
   // for page navigation
   const navigate = useNavigate();
 
-  // provides access to the current user's User object
-  const { user } = useUser();
-
-  // ? this must be a protected route?
   // handling delete
   const handleDelete = async (_id: string) => {
     const isdeleted = await deleteLink.mutateAsync({ id: _id });
@@ -105,21 +93,13 @@ export default function HomePage() {
           }}>
           Go to Home
         </Button>
-        {/* <SearchBar
-          setError={setError}
-          setSearchData={setData}
-          tags={tagSearch}
-          setTag={setTagSearch}
-          setLoading={setIsLoading}
-        /> */}
-        <SignOutButton>
-          <Button
-            onClick={() => {
-              window.postMessage({ type: "SIGN_OUT" }, "*");
-            }}>
-            Sign out
-          </Button>
-        </SignOutButton>
+        <Button
+          onClick={() => {
+            logout();
+            window.postMessage({ type: "SIGN_OUT" }, "*");
+          }}>
+          Sign out
+        </Button>
 
         <Button
           onClick={() => {
@@ -148,7 +128,7 @@ export default function HomePage() {
         </Select>
       </div>
       <div className="p-5">
-        <h1 className="text-2xl font-bold">Hello {user?.fullName} </h1>
+        <h1 className="text-2xl font-bold">Hello {user?.name} </h1>
       </div>
       <div className="pl-5">
         <p>Total Links: {Array.isArray(data) ? data.length : 0}</p>

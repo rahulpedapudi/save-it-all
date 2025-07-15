@@ -5,7 +5,11 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import ItemDetail from "@/components/ItemDetail";
 import NoteDetail from "@/components/NoteDetail";
+import { useAuth } from "../contexts/AuthContext";
+
 export default function DetailPage() {
+  const { token } = useAuth();
+
   // gets _id from the parameters of the url - /detail/:_id
   const { _id } = useParams();
 
@@ -35,10 +39,11 @@ export default function DetailPage() {
 
   const handleUpdate = async (updatedData: any) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/link/${_id}`, {
+      const res = await fetch(`http://localhost:5000/api/links/${_id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(updatedData),
       });
@@ -50,6 +55,7 @@ export default function DetailPage() {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
             },
           }
         );
@@ -70,6 +76,7 @@ export default function DetailPage() {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
         });
         const json = await res.json();
@@ -90,6 +97,7 @@ export default function DetailPage() {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       });
       const updatedData = await fetch(
@@ -98,6 +106,7 @@ export default function DetailPage() {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
         }
       );

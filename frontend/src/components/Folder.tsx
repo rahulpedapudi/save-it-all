@@ -19,11 +19,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth } from "@clerk/clerk-react";
 import { useCollections } from "@/hooks/useCollection";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCreateCollection } from "@/hooks/useCreateCollection";
 import { useAssignCollection } from "@/hooks/useAssignCollection";
+
 interface FolderProps {
   linkId?: string | undefined;
   linkCollectionId?: string | null;
@@ -37,8 +37,6 @@ export default function Folder({ linkId, linkCollectionId }: FolderProps) {
     created_at: Date;
     color: string;
   }
-
-  const { getToken } = useAuth();
 
   // state to show the currently selected collection
   const [selectedCollection, setSelectedCollection] = useState("");
@@ -112,7 +110,6 @@ export default function Folder({ linkId, linkCollectionId }: FolderProps) {
     if (!selected) return;
 
     try {
-      const token = await getToken();
       const isAssigned = await assignCollection.mutateAsync({
         linkId: linkId,
         collectionId: selected._id,

@@ -10,20 +10,13 @@ import { Textarea } from "@/components/ui/textarea";
 import CloseLight from "../assets/Close_L.svg";
 import {
   Sheet,
-  SheetClose,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
+  SheetClose,
 } from "@/components/ui/sheet";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
-
 import {
   Dialog,
   DialogContent,
@@ -32,10 +25,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { useAuth } from "@clerk/clerk-react";
 
+import { useAuth } from "../contexts/AuthContext";
 import { useCollections } from "@/hooks/useCollection";
 import { useCreateCollection } from "@/hooks/useCreateCollection";
 import { useQueryClient } from "@tanstack/react-query";
@@ -49,8 +49,7 @@ interface CollectionData {
 }
 
 export default function AddNote() {
-  const { getToken } = useAuth();
-
+  const { token } = useAuth();
   const queryClient = useQueryClient();
 
   const [title, setTitle] = useState("");
@@ -70,6 +69,11 @@ export default function AddNote() {
   const createCollection = useCreateCollection();
 
   const handleSave = async () => {
+    if (!token) {
+      toast("Please log in to save notes");
+      return;
+    }
+
     const note = {
       title: title,
       content: content,
@@ -78,7 +82,6 @@ export default function AddNote() {
     };
 
     try {
-      const token = await getToken();
       const response = await fetch("http://localhost:5000/api/save-note", {
         method: "POST",
         headers: {

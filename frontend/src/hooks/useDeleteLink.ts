@@ -1,13 +1,16 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@clerk/clerk-react";
+import { useAuth } from "../contexts/AuthContext";
 
 export const useDeleteLink = () => {
-  const { getToken } = useAuth();
+  const { token } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ id }: { id: string }) => {
-      const token = await getToken();
+      if (!token) {
+        throw new Error("No authentication token");
+      }
+
       const res = await fetch(`http://localhost:5000/api/links/${id}`, {
         method: "DELETE",
         headers: {
