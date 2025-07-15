@@ -4,6 +4,7 @@ from flask_pymongo import PyMongo
 from flask_cors import CORS
 from api.routes import api_bp
 from api.collections import collections_bp
+from api.auth_routes import auth_bp
 
 app = Flask(__name__)
 
@@ -19,6 +20,7 @@ app.mongo = mongo
 # api Blueprint
 app.register_blueprint(api_bp, url_prefix='/api')
 app.register_blueprint(collections_bp, url_prefix="/collections")
+app.register_blueprint(auth_bp, url_prefix="/api/auth")
 
 
 with app.app_context():
