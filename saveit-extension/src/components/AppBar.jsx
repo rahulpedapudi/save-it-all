@@ -1,5 +1,5 @@
 ﻿import Close from "../assets/Close.svg";
-import Logo from "../assets/SaveItLogo.svg";
+import Logo from "../assets/saveItLogo.svg";
 
 export default function AppBar() {
   return (
