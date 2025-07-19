@@ -8,6 +8,7 @@ from werkzeug.exceptions import BadRequest, NotFound
 from urllib.parse import urlparse
 from .google_auth import require_google_auth
 
+
 # blueprint
 api_bp = Blueprint('api', __name__)
 

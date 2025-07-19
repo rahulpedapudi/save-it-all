@@ -5,7 +5,12 @@ load_dotenv()
 
 
 class Config:
-    MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/py")
+
+    USER = os.getenv("MONGO_USER")
+    PASSWORD = os.getenv("MONGO_PASSWORD")
+
+    MONGO_URI = (
+        f"mongodb+srv://{USER}:{PASSWORD}@db.celqtlm.mongodb.net/db?retryWrites=true&w=majority&appName=db")
 
     # Google OAuth Configuration
     GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")

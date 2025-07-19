@@ -1,28 +1,21 @@
-from pymongo import MongoClient
 
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
+from dotenv import load_dotenv
+import os
 
-MONGO_URI = "mongodb://localhost:27017/"  # Your MongoDB connection string
-DB_NAME = "py"  # The name of your database
-COLLECTION_NAME = "links"
+load_dotenv()
 
-try:
-    client = MongoClient(MONGO_URI)
-    db = client[DB_NAME]
-    collection = db[COLLECTION_NAME]
-    print(
-        f"Successfully connected to MongoDB and selected collection '{COLLECTION_NAME}'")
-except Exception as e:
-    print(f"Error connecting to MongoDB: {e}")
-    exit()  # Exit if connection fails
+USER = os.getenv("MONGO_USER")
+PASSWORD = os.getenv("MONGO_PASSWORD")
 
-update_result = collection.update_many(
-    {},
-    {
-        "$set": {
-            "content_type": ""
-        }
-    }
-)
+uri = f"mongodb+srv://{USER}:{PASSWORD}@save-it.p06pktm.mongodb.net/?retryWrites=true&w=majority&appName=save-it"
 
-print(f"Matched {update_result.matched_count} document(s).")
-print(f"Modified {update_result.modified_count} document(s).")
+# Create a new client and connect to the server
+client = MongoClient(uri)
+
+db = client["save-it-db"]
+links_collection = db["links"]
+
+list_doc = list(links_collection.find({}))
+print(list_doc)
