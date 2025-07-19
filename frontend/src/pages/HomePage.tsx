@@ -95,6 +95,7 @@ export default function HomePage() {
         </Button>
         <Button
           onClick={() => {
+            localStorage.removeItem("auth_token");
             logout();
             window.postMessage({ type: "SIGN_OUT" }, "*");
           }}>

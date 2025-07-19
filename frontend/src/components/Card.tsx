@@ -60,9 +60,7 @@ function Card(props: CardProps) {
         <div className="flex gap-2 items-center">
           <Button onClick={() => setShowConfirm(true)}> Delete</Button>
           <Button onClick={handleOpen}> Open</Button>
-          <Button onClick={() => {
-            
-          }}>
+          <Button onClick={() => {}}>
             <Heart />
           </Button>
         </div>

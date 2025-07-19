@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "typeRoots": ["./node_modules/@types", "./src/types"],
-    "jsx": "react-jsx", // 👈 THIS is the fix
+    "jsx": "react-jsx", // 
     "module": "ESNext",
     "target": "ESNext",
     "moduleResolution": "bundler",

@@ -152,9 +152,7 @@ export default function AddNote() {
             New Note
           </Button>
         </SheetTrigger>
-        <SheetContent
-          side="right"
-          className="w-full text-white sm:max-w-2xl p-6">
+        <SheetContent side="right" className="w-full sm:max-w-2xl p-6">
           <SheetHeader>
             <SheetTitle className="text-2xl font-semibold text-left">
               <Input
