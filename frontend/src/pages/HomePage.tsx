@@ -1,9 +1,9 @@
-﻿import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Card from "../components/Card.js";
 import { useAuth } from "../contexts/AuthContext";
 import { Button } from "@/components/ui/button.js";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import SearchBar from "@/components/SearchBar.js";
+import SearchBar from "../components/SearchBar.js";
 import LoadingSpinner from "@/components/LoadingSpinner.js";
 import { useCollections } from "@/hooks/useCollection.js";
 import {
@@ -16,7 +16,7 @@ import {
 import AddNote from "@/components/AddNote.js";
 import { useLinks } from "@/hooks/useLinks.js";
 import { useDeleteLink } from "@/hooks/useDeleteLink.js";
-import { useQueryClient } from "@tanstack/react-query";
+import { useUpdateFav } from "@/hooks/useUpdateFav.js";
 
 interface CollectionData {
   _id: string;
@@ -27,27 +27,21 @@ interface CollectionData {
 }
 
 export default function HomePage() {
-  const queryClient = useQueryClient();
   const deleteLink = useDeleteLink();
+  const updateFav = useUpdateFav();
 
-  // state for storing data
-  const { data: data, isPending: isLoading, isError: error } = useLinks();
-
-  // this is managed SearchBar component
   const [tagSearch, setTagSearch] = useState<string[]>([]);
+  const { data, isPending: isLoading, isError, error } = useLinks(tagSearch);
 
   const { data: collections = [] } = useCollections();
   const [searchParams, setSearchParams] = useSearchParams();
   const collectionFromUrl = searchParams.get("collection") || "all";
 
-  // Use that as your initial state
   const [selectedCollection, setSelectedCollection] =
     useState(collectionFromUrl);
 
-  // provides access to the current user's authentication state and methods to manage the active session.
   const { token, logout, user } = useAuth();
 
-  // this hook sends the jwt to the extension. content.js --> background.js --> local storage
   useEffect(() => {
     const sendJWTToExtension = async () => {
       try {
@@ -68,10 +62,8 @@ export default function HomePage() {
     setSelectedCollection(urlValue);
   }, [searchParams]);
 
-  // for page navigation
   const navigate = useNavigate();
 
-  // handling delete
   const handleDelete = async (_id: string) => {
     const isdeleted = await deleteLink.mutateAsync({ id: _id });
     if (isdeleted) {
@@ -79,74 +71,34 @@ export default function HomePage() {
     }
   };
 
+  const handleLike = (linkId: string) => {
+    updateFav.mutate({ linkId, tags: tagSearch });
+  };
+
   const filteredData = useMemo(() => {
+    if (!data) return [];
     if (selectedCollection === "all") return data;
     return data.filter((item: any) => item?.folder_id === selectedCollection);
-  }, [data, selectedCollection, collections]);
+  }, [data, selectedCollection]);
 
   return (
     <>
-      <div className="flex mt-6 mr-6 gap-5 justify-end place-items-center">
-        <Button
-          onClick={() => {
-            navigate("/");
-          }}>
-          Go to Home
-        </Button>
-        <Button
-          onClick={() => {
-            localStorage.removeItem("auth_token");
-            logout();
-            window.postMessage({ type: "SIGN_OUT" }, "*");
-          }}>
-          Sign out
-        </Button>
-
-        <Button
-          onClick={() => {
-            navigate("/profile");
-          }}>
-          View Profile
-        </Button>
-        <Select
-          value={selectedCollection}
-          onValueChange={(value) => {
-            setSelectedCollection(value);
-            setSearchParams({ collection: value });
-          }}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Filter by collection" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Items</SelectItem>
-            {collections?.map((collection: any) => (
-              <SelectItem key={collection._id} value={collection._id}>
-                {collection.name.charAt(0).toUpperCase() +
-                  collection.name.slice(1)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="p-10">
+        <h1 className="font-bold font-sans-serif text-3xl">SaveIt Box</h1>
       </div>
-      <div className="p-5">
-        <h1 className="text-2xl font-bold">Hello {user?.name} </h1>
+      <div className="px-10">
+        <SearchBar tags={tagSearch} onTagsChange={setTagSearch} />
       </div>
-      <div className="pl-5">
-        <p>Total Links: {Array.isArray(data) ? data.length : 0}</p>
-        <p>
-          Filtered Links:{" "}
-          {Array.isArray(filteredData) ? filteredData.length : 0}
-        </p>
-        <p>Selected Collection: {selectedCollection}</p>
-      </div>
-      <div className="p-10 flex gap-0.5 justify-evenly items-center flex-wrap">
-        {error && <div className="text-gray-500 text-center mt-4">{error}</div>}
+      {/* <AddNote /> */}
+      <div className="px-10 flex justify-between items-center flex-wrap">
+        {isError && (
+          <div className="text-gray-500 text-center mt-4">{error.message}</div>
+        )}
         {isLoading && (
           <div className="flex items-center justify-center min-h-screen">
             <LoadingSpinner variant="ring" size="xl" />
           </div>
         )}
-        {!isLoading && <AddNote />}
         {filteredData && !isLoading && (
           <>
             {filteredData.map((item: any) => (
@@ -163,12 +115,14 @@ export default function HomePage() {
                 noteContent={item?.content}
                 url={item.url}
                 tags={item.tags}
-                handleTagClick={(item) => {
-                  if (!tagSearch.includes(item.toLowerCase())) {
-                    setTagSearch([...tagSearch, item]);
+                isFav={item.is_favorite}
+                handleTagClick={(tag) => {
+                  if (!tagSearch.includes(tag.toLowerCase())) {
+                    setTagSearch([...tagSearch, tag]);
                   }
                 }}
                 handleDelete={handleDelete}
+                handleLike={handleLike}
               />
             ))}
           </>

@@ -1,18 +1,22 @@
-﻿import { useQuery, useQueryClient } from "@tanstack/react-query";
+﻿import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../contexts/AuthContext";
 
-export const useLinks = () => {
+export const useLinks = (tags: string[] = []) => {
   const { token } = useAuth();
-  const queryClient = useQueryClient();
 
   return useQuery({
-    queryKey: ["getlinks"],
+    queryKey: ["getlinks", tags],
     queryFn: async () => {
       if (!token) {
         throw new Error("No authentication token");
       }
 
-      const response = await fetch("http://localhost:5000/api/links", {
+      const queryParams = tags
+        .map((tag) => `tags=${encodeURIComponent(tag)}`)
+        .join("&");
+      const url = `http://localhost:5000/api/links${queryParams ? `?${queryParams}` : ''}`;
+
+      const response = await fetch(url, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

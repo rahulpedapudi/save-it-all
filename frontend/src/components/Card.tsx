@@ -1,7 +1,16 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import { Heart } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 type CardProps = {
   _id: string;
@@ -9,13 +18,19 @@ type CardProps = {
   url: string;
   tags: string[];
   noteContent?: string;
+  isFav: boolean;
   handleDelete: (_id: string) => Promise<void>;
   handleTagClick: (tag: string) => void;
+  handleLike: (_id: string) => void;
 };
 
 function Card(props: CardProps) {
+  const { token } = useAuth();
+
   // state used for confirmation popup
   const [showConfirm, setShowConfirm] = useState<boolean>(false);
+
+  // const [isFav, setIsFav] = useState<boolean>(false);
 
   // navigate programmatically in the browser in response to user interactions or effect
   const navigate = useNavigate();
@@ -31,56 +46,85 @@ function Card(props: CardProps) {
   };
 
   return (
-    <div className=" relative w-72 h-64 border-2 p-4 mb-6 box-border border-black overflow-hidden">
-      <div className="mb-9">
-        <h1 className="font-bold text-2xl line-clamp-2 overflow-hidden whitespace-normal break-words">
-          {props.title}
-        </h1>
-      </div>
-      <p className="line-clamp-4 overflow-hidden ">{props.noteContent}</p>
-      <div>
-        {props.tags && (
-          <ul className="flex flex-wrap">
-            {props.tags.map((item, index) => (
-              <li
-                className="bg-blue-500 text-xs text-white px-3 py-1 rounded-full mr-1 flex items-center gap-2"
-                key={index}>
-                <button
-                  className="cursor-pointer"
-                  onClick={() => props.handleTagClick(item)}
-                  type="button">
-                  {item}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-      <div className="absolute bottom-4 right-2">
-        <div className="flex gap-2 items-center">
-          <Button onClick={() => setShowConfirm(true)}> Delete</Button>
-          <Button onClick={handleOpen}> Open</Button>
-          <Button onClick={() => {}}>
-            <Heart />
-          </Button>
+    <>
+      <div
+        onClick={handleOpen}
+        className="relative mt-3 w-[440px] h-[240px] border-2 border-black p-5 mb-6 rounded-[7px] overflow-hidden cursor-pointer 
+           transition-all duration-300 ease-in-out 
+           hover:-translate-y-1 hover:shadow-sm">
+        <div className="mb-9">
+          <h1 className="font-black font-sans-serif text-4xl line-clamp-2 overflow-hidden whitespace-normal break-words">
+            {props.title}
+          </h1>
+          <p className="font-sans-serif py-4 text-gray-500 text-xs font-black">
+            {props.tags[0]}
+          </p>
         </div>
-      </div>
-      {showConfirm && (
-        <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded shadow-lg">
-            <p className="mb-4">Are you sure you want to delete this? </p>
-            <div className="flex justify-end space-x-4">
-              <Button
-                onClick={() => setShowConfirm(false)}
-                className="px-4 py-2 border">
-                Cancel
-              </Button>
-              <Button onClick={confirmDelete}>Delete</Button>
-            </div>
+        <p className="line-clamp-4 overflow-hidden ">{props.noteContent}</p>
+        <div>
+          {props.tags && (
+            <ul className="flex flex-wrap">
+              {props.tags.map((item, index) => (
+                <li
+                  className="text-xs  text-black font-semibold py-1 rounded-full mr-2 flex items-center gap-2"
+                  key={index}>
+                  <button
+                    className="cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      props.handleTagClick(item);
+                    }}
+                    type="button">
+                    {"#"}
+                    {item}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <div className="absolute bottom-4 right-2">
+          <div className="flex gap-2 items-center">
+            <Button
+              className="cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowConfirm(true);
+              }}>
+              {" "}
+              Delete
+            </Button>
+            <Button
+              className="cursor-pointer "
+              onClick={(e) => {
+                e.stopPropagation();
+                props.handleLike(props._id);
+              }}>
+              {props.isFav ? <Heart className="fill-red-700" /> : <Heart />}
+            </Button>
           </div>
         </div>
-      )}
-    </div>
+      </div>
+      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Are you sure you want to delete this?</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. This will permanently delete the
+              item.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowConfirm(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDelete}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 

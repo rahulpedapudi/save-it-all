@@ -78,7 +78,7 @@ export default function AddNote() {
       title: title,
       content: content,
       tags: tags,
-      folder_id: collection,
+      folder_id: collection,  
     };
 
     try {
