@@ -285,6 +285,39 @@ def analyze_link(link_id):
         return jsonify({"error": f"Failed to analyze link: {str(e)}"}), 500
 
 
+@api_bp.route("/fav/<link_id>", methods=["GET"])
+@require_google_auth
+def favorite_link(link_id):
+    mongo = current_app.mongo
+    user_id = request.user_id
+    if not link_id:
+        return jsonify({"error": "link_id is required"}), 400
+    try:
+        # Verify the link belongs to the user
+        link = mongo.db.links.find_one(
+            {"_id": ObjectId(link_id), "user_id": user_id})
+        if not link:
+            raise NotFound("Link not found")
+
+        # Toggle favorite
+        new_favorite_status = not link.get("is_favorite", False)
+
+        result = mongo.db.links.update_one(
+            {"_id": ObjectId(link_id), "user_id": user_id},
+            {"$set": {"is_favorite": new_favorite_status}}
+        )
+
+        if result.modified_count == 0:
+            raise NotFound("Link not found")
+
+        return jsonify({"message": "Link favorite status updated successfully"}), 200
+
+    except NotFound as e:
+        return jsonify({"error": str(e)}), 404
+    except Exception as e:
+        return jsonify({"error": f"Failed to update favorite status: {str(e)}"}), 500
+
+
 @api_bp.route("/save-note", methods=["POST"])
 @require_google_auth
 def save_note():
