@@ -2,6 +2,7 @@
 import CloseLight from "../assets/Close_L.svg";
 import { useNavigate } from "react-router-dom";
 import AppBar from "../components/AppBar";
+import { Pencil } from "lucide-react";
 
 export default function InitialPage() {
   const navigate = useNavigate();
@@ -15,6 +16,8 @@ export default function InitialPage() {
   const [note, setNote] = useState("");
 
   const [isSaving, setIsSaving] = useState(false);
+
+  const [isEditing, setIsEditing] = useState(false);
 
   const [hasSelectedText, setHasSelectedText] = useState(false);
   const [TextSelected, setTextSelected] = useState("");
@@ -144,18 +147,45 @@ export default function InitialPage() {
     setTags(filtered);
   };
 
+  // When user edits title
+  const handleTitleChange = (newTitle) => {
+    setTabInfo((prev) => ({ ...prev, title: newTitle }));
+  };
+
   return (
     !isLoading && (
       <div className="w-[400px]  p-[20px] m-auto border-2">
         <AppBar />
+
         <section className="font-body link-info mb-4">
-          <h1
-            id="title-display"
-            className={`${
-              hasSelectedText ? "line-clamp-2 overflow-hidden mb-4" : null
-            } page-title text-3xl font-bold mb-2`}>
-            {tabInfo?.title}
-          </h1>
+          {isEditing ? (
+            <input
+              type="text"
+              className="w-full text-3xl font-bold border-b border-gray-300 focus:outline-none"
+              value={tabInfo?.title}
+              onChange={(e) => handleTitleChange(e.target.value)}
+              onBlur={() => setIsEditing(false)}
+              onKeyDown={(e) => e.key === "Enter" && setIsEditing(false)}
+              autoFocus
+            />
+          ) : (
+            <div className="flex">
+              <h1
+                id="title-display"
+                className={`${
+                  hasSelectedText ? "line-clamp-2 overflow-hidden mb-4" : null
+                } page-title text-3xl font-bold mb-2`}>
+                {tabInfo?.title}
+              </h1>
+              <button
+                className="ml-2 text-black "
+                onClick={() => {
+                  setIsEditing(true);
+                }}>
+                <Pencil size={16} stroke="black" strokeWidth={1} />
+              </button>
+            </div>
+          )}
 
           {hasSelectedText ? (
             <>
@@ -168,7 +198,7 @@ export default function InitialPage() {
             </>
           ) : (
             <a
-              href=""
+              href={tabInfo?.url}
               id="url-display"
               className="block w-full hover: underline truncate text-lg text-blue-500 font-bold">
               {tabInfo?.url}
