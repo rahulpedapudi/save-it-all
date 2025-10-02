@@ -9,6 +9,7 @@ interface ItemDetailProps {
   tags: string[];
   summary: string;
   note: string;
+  image_url: string;
   handleSummary: () => Promise<void>;
 }
 
@@ -19,23 +20,44 @@ export default function ItemDetail({
   folder_id,
   tags,
   summary,
+  image_url,
   note,
   handleSummary,
 }: ItemDetailProps) {
   return (
     <div>
-      <div className="flex justify-between">
-        <div>
-          <h1 className="text-2xl mb-4 font-bold">{title}</h1>
-          <a className="underline text-blue-400" target="_blank" href={url}>
-            {url}
-          </a>
-          <Folder linkId={_id} linkCollectionId={folder_id} />
+      {image_url ? (
+        <div className="flex justify-center">
+          <div className="w-full h-auto rounded-xl overflow-hidden shadow-md mb-6">
+            <img
+              src={image_url}
+              alt="thumbnail"
+              className="w-full h-full object-contain"
+            />
+          </div>
         </div>
-        {summary == "" ? (
-          <Button onClick={handleSummary}>Summarise</Button>
-        ) : null}
+      ) : null}
+
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl mb-4 font-bold">{title}</h1>
+        </div>
+        <div className="flex gap-3 justify-center items-baseline">
+          <a
+            className="underline text-blue-400 mb-2"
+            target="_blank"
+            href={url}>
+            Show Original
+          </a>
+
+          {summary == "" ? (
+            <Button onClick={handleSummary}>Summarise</Button>
+          ) : null}
+        </div>
       </div>
+
+      <Folder linkId={_id} linkCollectionId={folder_id} />
+
       <div className="m-4 flex gap-8 rounded-md">
         {tags && (
           <ul className="flex gap-2 flex-wrap">

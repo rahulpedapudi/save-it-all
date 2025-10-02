@@ -24,6 +24,7 @@ export default function DetailPage() {
     folder_id: string;
     content_type: string;
     content: string;
+    og_preview_image: string;
   }
 
   // state for data
@@ -127,41 +128,54 @@ export default function DetailPage() {
   }
 
   return (
-    <div className="px-36 py-10">
-      {data.content_type === "note" && (
-        <NoteDetail
-          _id={data._id}
-          title={data.title}
-          folder_id={data.folder_id}
-          tags={data.tags}
-          content={noteContent}
-          setContent={setNoteContent}
-        />
-      )}
+    <>
+      <div className="px-4 md:px-36 py-10">
+        {data.content_type === "note" && (
+          <NoteDetail
+            _id={data._id}
+            title={data.title}
+            folder_id={data.folder_id}
+            tags={data.tags}
+            content={noteContent}
+            setContent={setNoteContent}
+          />
+        )}
 
-      {data.content_type === "" && (
-        <ItemDetail
-          _id={data._id}
-          title={data.title}
-          url={data.url}
-          folder_id={data.folder_id}
-          tags={data.tags}
-          note={data.note}
-          handleSummary={handleSummary}
-          summary={data.summary}
-        />
-      )}
+        {data.content_type === "" && (
+          <ItemDetail
+            _id={data._id}
+            title={data.title}
+            url={data.url}
+            folder_id={data.folder_id}
+            tags={data.tags}
+            note={data.note}
+            image_url={data.og_preview_image}
+            handleSummary={handleSummary}
+            summary={data.summary}
+          />
+        )}
 
-      <Button onClick={handleClick} type="button">
-        Update
-      </Button>
-      {isUpdateClicked ? (
-        <UpdateForm
-          initialData={data}
-          onClose={() => setIsUpdateClicked(false)}
-          onUpdate={handleUpdate}
-        />
-      ) : null}
-    </div>
+        <div className="flex gap-3">
+          <Button
+            className="cursor-pointer"
+            onClick={handleClick}
+            type="button">
+            Update
+          </Button>
+
+          <Button className="cursor-pointer" type="button">
+            Enrich Link
+          </Button>
+        </div>
+
+        {isUpdateClicked ? (
+          <UpdateForm
+            initialData={data}
+            onClose={() => setIsUpdateClicked(false)}
+            onUpdate={handleUpdate}
+          />
+        ) : null}
+      </div>
+    </>
   );
 }

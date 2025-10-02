@@ -41,7 +41,7 @@ export default function NoteDetail({
       <div className="h-auto w-auto my-8 flex justify-center items-center">
         <textarea
           title="note"
-            className="h-[400px] w-full outline-none resize-none focus-visible:ring-0 border-none text-lg"
+          className="h-[400px] w-full outline-none resize-none focus-visible:ring-0 border-none text-lg"
           value={content}
           onChange={(e) => {
             setContent(e.target.value);
