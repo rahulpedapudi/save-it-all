@@ -7,10 +7,16 @@ from tasks import content_extract
 from werkzeug.exceptions import BadRequest, NotFound
 from urllib.parse import urlparse
 from .google_auth import require_google_auth
+from tasks.link_tasks import enrich_link_task
 
 
 # blueprint
 api_bp = Blueprint('api', __name__)
+
+
+@api_bp.route("/health", methods=["GET"])
+def api_health():
+    return jsonify({"status": "running"}), 201
 
 
 # endpoint for saving the link, used in browser extension only
@@ -35,7 +41,7 @@ def save_data():
     # Validate URL
     if not url:
         return jsonify({"error": "URL is required"}), 400
-
+    
     try:
         parsed_url = urlparse(url)
         domain_name = parsed_url.netloc.lower()
@@ -59,7 +65,6 @@ def save_data():
 
     link = {
         "user_id": user_id,
-        "tab_id": data['id'],
         "title": data['title'],
         "url": url,
         "tags": [domain_name] + (data['tags'] if data['tags'] else []),
@@ -73,6 +78,7 @@ def save_data():
         "selected_text": data.get('selected_text', ""),
         "is_favorite": False,
         "folder_id": "",
+        "status": "pending",
         "created_at": datetime.now().isoformat()
     }
 
@@ -91,10 +97,8 @@ def save_data():
         result = mongo.db.links.insert_one(link)
         link['_id'] = str(result.inserted_id)
 
-        # TODO: Implement background tasks when Celery is set up
-        # For now, we'll skip the background processing to avoid errors
-        # summarization.summarize_link.delay(str(result.inserted_id))
-        # content_extract.extract_content.delay(str(result.inserted_id))
+        # background tasks
+        enrich_link_task.delay(str(result.inserted_id))
 
         return jsonify({"message": "Link saved successfully", "link": link}), 201
 
@@ -275,9 +279,11 @@ def analyze_link(link_id):
         if not link:
             return jsonify({"error": "Link not found"}), 404
 
+        print("Analyzing link:", link)
         # TODO: Implement actual summarization logic here
         # For now, we'll just return a placeholder message
         # In the future, this should call the summarization task
+        enrich_link_task.delay(str(link_id))
 
         return jsonify({"message": "Analysis started"}), 200
 

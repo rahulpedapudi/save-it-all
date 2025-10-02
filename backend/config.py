@@ -9,6 +9,11 @@ class Config:
     USER = os.getenv("MONGO_USER")
     PASSWORD = os.getenv("MONGO_PASSWORD")
 
+    CELERY_BROKER_URL = os.environ.get(
+        'CELERY_BROKER_URL', 'redis://localhost:6379/0')
+    CELERY_RESULT_BACKEND = os.environ.get(
+        'CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
+
     MONGO_URI = (
         f"mongodb+srv://{USER}:{PASSWORD}@db.celqtlm.mongodb.net/db?retryWrites=true&w=majority&appName=db")
 
@@ -26,3 +31,6 @@ class Config:
 
     # Frontend URL for CORS
     FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+
+print(os.getenv("MONGO_USER"))

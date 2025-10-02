@@ -8,3 +8,7 @@ google-auth-oauthlib==1.1.0
 google-auth-httplib2==0.1.1
 PyJWT==2.8.0
 cryptography==41.0.7 
+werkzeug
+pymong
+yt-dlp
+trafilatura
