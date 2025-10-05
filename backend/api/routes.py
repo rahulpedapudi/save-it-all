@@ -41,7 +41,7 @@ def save_data():
     # Validate URL
     if not url:
         return jsonify({"error": "URL is required"}), 400
-    
+
     try:
         parsed_url = urlparse(url)
         domain_name = parsed_url.netloc.lower()
@@ -118,6 +118,14 @@ def get_links():
     tags = request.args.getlist('tags')
     search = request.args.get('search', '')
 
+    page = int(request.args.get('page', 1))
+    limit = int(request.args.get('limit', 10))
+    skip = (page - 1) * limit
+
+    collection = mongo.db.links
+
+    total = collection.count_documents({})
+
     # Build query
     query = {"user_id": user_id}
 
@@ -132,13 +140,14 @@ def get_links():
         ]
 
     try:
-        links = list(mongo.db.links.find(query).sort("created_at", -1))
+        links = list(collection.find(query).sort(
+            "created_at", -1).skip(skip).limit(limit))
 
         # Convert ObjectId to string for JSON serialization
         for link in links:
             link['_id'] = str(link['_id'])
 
-        return jsonify({"links": links}), 200
+        return jsonify({"page": page, "limit": limit, "total": total, "pages": (total + limit - 1) // limit, "links": links}), 200
 
     except Exception as e:
         return jsonify({"error": f"Failed to fetch links: {str(e)}"}), 500

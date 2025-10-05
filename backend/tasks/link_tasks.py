@@ -51,18 +51,22 @@ def enrich_link_task(link_id):
             logger.warning(f"No link found for ID {link_id}")
             return None
 
-        scraped_data = enrich(link['url'])
-        result = db.links.update_one(
-            {"_id": ObjectId(link_id)}, {"$set": scraped_data})
+        if link.get("status") == "pending":
+            scraped_data = enrich(link["url"])
 
-        if result.matched_count == 0:
-            logger.info("Link not found in DB during update")
-        elif result.modified_count == 0:
-            logger.info("No new data to update")
+            result = db.links.update_one(
+                {"_id": ObjectId(link_id)}, {"$set": scraped_data})
+
+            if result.matched_count == 0:
+                logger.info("Link not found in DB during update")
+            elif result.modified_count == 0:
+                logger.info("No new data to update")
+            else:
+                logger.info("Successfully enriched link")
+
+            return scraped_data
         else:
-            logger.info("Successfully enriched link")
-
-        return scraped_data
+            return None
 
     except Exception as e:
         logger.error(f"Error enriching link {link_id}: {e}")
