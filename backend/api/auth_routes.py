@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, redirect, current_app
 from flask_cors import cross_origin
+
 from .google_auth import (
     get_google_auth_url,
     exchange_code_for_token,
@@ -104,3 +105,4 @@ def verify_token():
 def logout():
     """Logout endpoint (client-side token removal)"""
     return jsonify({"message": "Logged out successfully"}), 200
+    

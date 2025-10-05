@@ -1,11 +1,14 @@
-﻿from flask import request, jsonify, Blueprint, current_app
-from pymongo.errors import DuplicateKeyError
-from bson.objectid import ObjectId
+"""Notes: standard → third-party → local 😅 """
 from datetime import datetime
+from urllib.parse import urlparse
+
+from flask import request, jsonify, Blueprint, current_app
+from bson.objectid import ObjectId
+from pymongo.errors import DuplicateKeyError
+from werkzeug.exceptions import BadRequest, NotFound
+
 from tasks import summarization
 from tasks import content_extract
-from werkzeug.exceptions import BadRequest, NotFound
-from urllib.parse import urlparse
 from .google_auth import require_google_auth
 from tasks.link_tasks import enrich_link_task
 
@@ -369,3 +372,4 @@ def save_note():
     except Exception as e:
         print("Error: ", e)
         return jsonify({"status": "failed", "error": str(e)}), 500
+        
