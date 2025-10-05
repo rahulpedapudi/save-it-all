@@ -1,4 +1,4 @@
-﻿import { useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import UpdateForm from "../components/UpdateForm";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import ItemDetail from "@/components/ItemDetail";
 import NoteDetail from "@/components/NoteDetail";
 import { useAuth } from "../contexts/AuthContext";
+import { io } from "socket.io-client";
 
 export default function DetailPage() {
   const { token } = useAuth();
@@ -101,18 +102,6 @@ export default function DetailPage() {
           Authorization: `Bearer ${token}`,
         },
       });
-      const updatedData = await fetch(
-        `http://localhost:5000/api/links/${_id}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      const updatedJson = await updatedData.json();
-      setData(updatedJson);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -128,54 +117,54 @@ export default function DetailPage() {
   }
 
   return (
-    <>
-      <div className="px-4 md:px-36 py-10">
-        {data.content_type === "note" && (
-          <NoteDetail
-            _id={data._id}
-            title={data.title}
-            folder_id={data.folder_id}
-            tags={data.tags}
-            content={noteContent}
-            setContent={setNoteContent}
-          />
-        )}
+    <div className="">
+      {/* Note detail view */}
+      {data.content_type === "note" && (
+        <NoteDetail
+          _id={data._id}
+          title={data.title}
+          folder_id={data.folder_id}
+          tags={data.tags}
+          content={noteContent}
+          setContent={setNoteContent}
+        />
+      )}
 
-        {data.content_type === "" && (
-          <ItemDetail
-            _id={data._id}
-            title={data.title}
-            url={data.url}
-            folder_id={data.folder_id}
-            tags={data.tags}
-            note={data.note}
-            image_url={data.og_preview_image}
-            handleSummary={handleSummary}
-            summary={data.summary}
-          />
-        )}
+      {/* Link detail view */}
+      {data.content_type === "" && (
+        <ItemDetail
+          _id={data._id}
+          title={data.title}
+          url={data.url}
+          folder_id={data.folder_id}
+          tags={data.tags}
+          note={data.note}
+          image_url={data.og_preview_image}
+          handleSummary={handleSummary}
+          summary={data.summary}
+          onUpdateClick={handleClick}
+        />
+      )}
 
-        <div className="flex gap-3">
+      {/* Update button + form */}
+      {data.content_type === "note" && (
+        <div className="px-6 md:px-12 lg:px-24">
           <Button
             className="cursor-pointer"
             onClick={handleClick}
             type="button">
             Update
           </Button>
-
-          <Button className="cursor-pointer" type="button">
-            Enrich Link
-          </Button>
         </div>
+      )}
 
-        {isUpdateClicked ? (
-          <UpdateForm
-            initialData={data}
-            onClose={() => setIsUpdateClicked(false)}
-            onUpdate={handleUpdate}
-          />
-        ) : null}
-      </div>
-    </>
+      {isUpdateClicked && (
+        <UpdateForm
+          initialData={data}
+          onClose={() => setIsUpdateClicked(false)}
+          onUpdate={handleUpdate}
+        />
+      )}
+    </div>
   );
 }

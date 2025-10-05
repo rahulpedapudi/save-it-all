@@ -17,6 +17,7 @@ import AddNote from "@/components/AddNote.js";
 import { useLinks } from "@/hooks/useLinks.js";
 import { useDeleteLink } from "@/hooks/useDeleteLink.js";
 import { useUpdateFav } from "@/hooks/useUpdateFav.js";
+import CustomPagination from "@/components/Pagination.js";
 
 interface CollectionData {
   _id: string;
@@ -30,8 +31,15 @@ export default function HomePage() {
   const deleteLink = useDeleteLink();
   const updateFav = useUpdateFav();
 
+  const [page, setPage] = useState(1);
+
   const [tagSearch, setTagSearch] = useState<string[]>([]);
-  const { data, isPending: isLoading, isError, error } = useLinks(tagSearch);
+  const {
+    data,
+    isPending: isLoading,
+    isError,
+    error,
+  } = useLinks(tagSearch, page, 10);
 
   const { data: collections = [] } = useCollections();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -82,7 +90,7 @@ export default function HomePage() {
   }, [data, selectedCollection]);
 
   return (
-    <>
+    <section className="mb-10">
       <div className="p-10">
         <h1 className="font-bold font-sans-serif text-3xl">SaveIt Box</h1>
       </div>
@@ -128,6 +136,27 @@ export default function HomePage() {
           </>
         )}
       </div>
-    </>
+      <CustomPagination
+        currentPage={page}
+        totalPages={10}
+        onPageChange={setPage}
+      />
+
+      {/* <div className="flex justify-between items-center mt-4">
+        <Button
+          onClick={() => setPage((p) => Math.max(p - 1, 1))}
+          disabled={page === 1 || isLoading}
+          className="px-4 py-2 rounded disabled:opacity-50">
+          Prev
+        </Button>
+        <span>Page {page} of 10</span>
+        <Button
+          onClick={() => setPage((p) => (p < 10 ? p + 1 : p))}
+          disabled={page === 10 || isLoading}
+          className="px-4 py-2rounded disabled:opacity-50">
+          Next
+        </Button>
+      </div> */}
+    </section>
   );
 }

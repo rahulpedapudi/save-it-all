@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 export default function LandingPage() {
   const { isAuthenticated, login } = useAuth();
@@ -22,11 +23,9 @@ export default function LandingPage() {
       <p className="text-lg mb-6">
         Save and organize your important links easily.
       </p>
-      <button
-        className="px-8 py-3 text-base rounded-md border-none bg-blue-600 text-white cursor-pointer mt-6 hover:bg-blue-700 transition"
-        onClick={handleSignIn}>
+      <Button className="p-7 text-md" onClick={handleSignIn}>
         Sign In with Google
-      </button>
+      </Button>
     </div>
   );
 }
