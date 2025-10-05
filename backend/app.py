@@ -1,7 +1,8 @@
 ﻿from flask import Flask
-from config import Config
 from flask_pymongo import PyMongo
 from flask_cors import CORS
+
+from config import Config
 from api.routes import api_bp
 from api.collections import collections_bp
 from api.auth_routes import auth_bp
