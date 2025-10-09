@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
-import { Heart } from "lucide-react";
+import { Delete, Heart, RemoveFormatting, Trash2 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import {
   Dialog,
@@ -49,62 +49,78 @@ function Card(props: CardProps) {
     <>
       <div
         onClick={handleOpen}
-        className="relative mt-3 w-[440px] h-[240px] border-2 border-black p-5 mb-6 rounded-[7px] overflow-hidden cursor-pointer 
-           transition-all duration-300 ease-in-out 
-           hover:-translate-y-1 hover:shadow-sm">
-        <div className="mb-9">
-          <h1 className="font-black font-sans-serif text-4xl line-clamp-2 overflow-hidden whitespace-normal break-words">
+        className="group relative w-full max-w-[420px] h-[240px] bg-gradient-to-br from-white to-gray-50 
+             border border-gray-200 rounded-b-lg rounded-t-lg p-5 mb-6 
+             shadow-sm hover:shadow-lg hover:border-blue-100 transition-all duration-300 ease-in-out hover:-translate-y-1 cursor-pointer">
+        {/* Title + Primary Tag */}
+        <div className="mb-3">
+          <h1
+            className="font-sans-serif text-2xl font-semibold text-gray-900 line-clamp-3 break-words 
+                   group-hover:text-blue-600 transition-colors duration-200">
             {props.title}
           </h1>
-          <p className="font-sans-serif py-4 text-gray-500 text-xs font-black">
-            {props.tags[0]}
-          </p>
-        </div>
-        <p className="line-clamp-4 overflow-hidden ">{props.noteContent}</p>
-        <div>
-          {props.tags && (
-            <ul className="flex flex-wrap">
-              {props.tags.map((item, index) => (
-                <li
-                  className="text-xs  text-black font-semibold py-1 rounded-full mr-2 flex items-center gap-2"
-                  key={index}>
-                  <button
-                    className="cursor-pointer"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      props.handleTagClick(item);
-                    }}
-                    type="button">
-                    {"#"}
-                    {item}
-                  </button>
-                </li>
-              ))}
-            </ul>
+          {props.tags?.[0] && (
+            <p className="mt-1 text-[0.7rem] font-semibold text-blue-500 uppercase tracking-wider">
+              {props.tags[0]}
+            </p>
           )}
         </div>
-        <div className="absolute bottom-4 right-2">
-          <div className="flex gap-2 items-center">
-            <Button
-              className="cursor-pointer"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowConfirm(true);
-              }}>
-              {" "}
-              Delete
-            </Button>
-            <Button
-              className="cursor-pointer "
-              onClick={(e) => {
-                e.stopPropagation();
-                props.handleLike(props._id);
-              }}>
-              {props.isFav ? <Heart className="fill-red-700" /> : <Heart />}
-            </Button>
-          </div>
+
+        {/* Note Content */}
+        <p className="text-sm text-gray-700 leading-relaxed line-clamp-4 mb-4">
+          {props.noteContent}
+        </p>
+
+        {/* Tags */}
+        {props.tags && (
+          <ul className="flex flex-wrap gap-2 mb-10">
+            {props.tags.map((item, index) => (
+              <li key={index}>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    props.handleTagClick(item);
+                  }}
+                  type="button"
+                  className="text-xs font-medium text-gray-700 bg-gray-100 px-2.5 py-1 rounded-full 
+                       hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200">
+                  #{item}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {/* Action Buttons */}
+        <div className="absolute bottom-4 right-4 flex gap-2 items-center">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hover:bg-red-50 text-gray-500 hover:text-red-600 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowConfirm(true);
+            }}>
+            <Trash2 className="w-4 h-4" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hover:bg-gray-100 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              props.handleLike(props._id);
+            }}>
+            {props.isFav ? (
+              <Heart className="fill-red-500 stroke-red-500 transition-all duration-200" />
+            ) : (
+              <Heart className="stroke-gray-600 transition-all duration-200 group-hover:stroke-blue-600" />
+            )}
+          </Button>
         </div>
       </div>
+
       <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
         <DialogContent>
           <DialogHeader>

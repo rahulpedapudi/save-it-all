@@ -1,5 +1,6 @@
 ﻿import { useState } from "react";
 import TagList from "./TagList";
+import { Input } from "./ui/input";
 
 interface SearchBarProps {
   tags: string[];
@@ -32,17 +33,41 @@ export default function SearchBar({ tags, onTagsChange }: SearchBarProps) {
   };
 
   return (
-    <div className="flex flex-col gap-2">
-      <input
-        type="text"
-        placeholder="Search or add tags with #"
-        value={searchInput}
-        onChange={handleSearch}
-        className="px-4 py-2 my-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
-      {tags.length > 0 && (
-        <TagList tags={tags} handleTagDelete={handleTagDelete} />
-      )}
+    // <div className="px-10 mb-6">
+    //   <div className="relative max-w-3xl mx-auto w-full">
+    //     <input
+    //       type="text"
+    //       placeholder="Search or add tags with #"
+    //       value={searchInput}
+    //       onChange={handleSearch}
+    //       className="w-full px-5 py-3 rounded-xs border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 placeholder-gray-400 transition-all duration-200 shadow-sm focus:shadow-md"
+    //     />
+    //     {tags.length > 0 && (
+    //       <div className="mt-3">
+    //         <TagList tags={tags} handleTagDelete={handleTagDelete} />
+    //       </div>
+    //     )}
+    //   </div>
+    // </div>
+    <div className="px-6 md:px-10 mb-8">
+      <div className="relative max-w-3xl mx-auto w-full">
+        {/* Search Input with Icon */}
+        <div className="relative">
+          <Input
+            type="text"
+            placeholder="Search or add tags with #"
+            value={searchInput}
+            onChange={handleSearch}
+          />
+        </div>
+
+        {/* Tags Display */}
+        {tags.length > 0 && (
+          <div className="mt-4 animate-in fade-in slide-in-from-top-2 duration-300">
+            <TagList tags={tags} handleTagDelete={handleTagDelete} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

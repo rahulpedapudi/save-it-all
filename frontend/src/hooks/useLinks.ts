@@ -27,7 +27,8 @@ export const useLinks = (tags: string[] = [], page: number, limit: number) => {
         },
       });
       const res = await response.json();
-      return res.links || [];
+      console.log(res);
+      return res || [];
     },
     enabled: !!token,
   });

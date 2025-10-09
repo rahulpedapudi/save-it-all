@@ -6,13 +6,6 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import SearchBar from "../components/SearchBar.js";
 import LoadingSpinner from "@/components/LoadingSpinner.js";
 import { useCollections } from "@/hooks/useCollection.js";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import AddNote from "@/components/AddNote.js";
 import { useLinks } from "@/hooks/useLinks.js";
 import { useDeleteLink } from "@/hooks/useDeleteLink.js";
@@ -39,7 +32,7 @@ export default function HomePage() {
     isPending: isLoading,
     isError,
     error,
-  } = useLinks(tagSearch, page, 10);
+  } = useLinks(tagSearch, page, 12);
 
   const { data: collections = [] } = useCollections();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -85,78 +78,89 @@ export default function HomePage() {
 
   const filteredData = useMemo(() => {
     if (!data) return [];
-    if (selectedCollection === "all") return data;
+    if (selectedCollection === "all") return data.links;
     return data.filter((item: any) => item?.folder_id === selectedCollection);
   }, [data, selectedCollection]);
 
   return (
-    <section className="mb-10">
-      <div className="p-10">
-        <h1 className="font-bold font-sans-serif text-3xl">SaveIt Box</h1>
-      </div>
-      <div className="px-10">
-        <SearchBar tags={tagSearch} onTagsChange={setTagSearch} />
-      </div>
-      {/* <AddNote /> */}
-      <div className="px-10 flex justify-between items-center flex-wrap">
-        {isError && (
-          <div className="text-gray-500 text-center mt-4">{error.message}</div>
-        )}
-        {isLoading && (
-          <div className="flex items-center justify-center min-h-screen">
-            <LoadingSpinner variant="ring" size="xl" />
-          </div>
-        )}
-        {filteredData && !isLoading && (
-          <>
-            {filteredData.map((item: any) => (
-              <Card
-                key={item._id}
-                _id={item._id}
-                title={
-                  item.save_type
-                    ? item.save_type === "full_page"
-                      ? item.title
-                      : item.selected_text
-                    : item.title
-                }
-                noteContent={item?.content}
-                url={item.url}
-                tags={item.tags}
-                isFav={item.is_favorite}
-                handleTagClick={(tag) => {
-                  if (!tagSearch.includes(tag.toLowerCase())) {
-                    setTagSearch([...tagSearch, tag]);
-                  }
-                }}
-                handleDelete={handleDelete}
-                handleLike={handleLike}
-              />
-            ))}
-          </>
-        )}
-      </div>
-      <CustomPagination
-        currentPage={page}
-        totalPages={10}
-        onPageChange={setPage}
-      />
+    <section className="w-full min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-6 md:px-10 py-10">
+        {/* Header + Search in one row */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
+          <h1 className="font-sans-serif text-3xl md:text-4xl font-bold text-gray-900">
+            SaveIt Box
+          </h1>
 
-      {/* <div className="flex justify-between items-center mt-4">
-        <Button
-          onClick={() => setPage((p) => Math.max(p - 1, 1))}
-          disabled={page === 1 || isLoading}
-          className="px-4 py-2 rounded disabled:opacity-50">
-          Prev
-        </Button>
-        <span>Page {page} of 10</span>
-        <Button
-          onClick={() => setPage((p) => (p < 10 ? p + 1 : p))}
-          disabled={page === 10 || isLoading}
-          className="px-4 py-2rounded disabled:opacity-50">
-          Next
-        </Button>
-      </div> */}
+          {/* Right-aligned search bar */}
+          <div className="w-full md:w-[340px]">
+            <SearchBar tags={tagSearch} onTagsChange={setTagSearch} />
+          </div>
+        </div>
+
+        {/* Masonry layout */}
+        <div className="px-6 md:px-10">
+          {isError && (
+            <div className="text-gray-500 text-center mt-6">
+              {error.message}
+            </div>
+          )}
+
+          {isLoading && (
+            <div className="flex items-center justify-center h-[60vh]">
+              <LoadingSpinner variant="ring" size="xl" />
+            </div>
+          )}
+
+          {!isLoading && filteredData && filteredData.length > 0 && (
+            <div
+              className="
+        columns-1 sm:columns-2 lg:columns-3 xl:columns-4
+        gap-6 space-y-6
+      ">
+              {filteredData.map((item: any) => (
+                <div key={item._id} className="break-inside-avoid">
+                  <Card
+                    _id={item._id}
+                    title={
+                      item.save_type
+                        ? item.save_type === "full_page"
+                          ? item.title
+                          : item.selected_text
+                        : item.title
+                    }
+                    noteContent={item?.content}
+                    url={item.url}
+                    tags={item.tags}
+                    isFav={item.is_favorite}
+                    handleTagClick={(tag) => {
+                      if (!tagSearch.includes(tag.toLowerCase())) {
+                        setTagSearch([...tagSearch, tag]);
+                      }
+                    }}
+                    handleDelete={handleDelete}
+                    handleLike={handleLike}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {!isLoading && filteredData?.length === 0 && (
+            <div className="text-center text-gray-500 mt-20">
+              No items found. Try saving something new!
+            </div>
+          )}
+        </div>
+
+        {/* Pagination */}
+        <div className="mt-10 flex justify-center">
+          <CustomPagination
+            currentPage={page}
+            totalPages={data?.pages}
+            onPageChange={setPage}
+          />
+        </div>
+      </div>
     </section>
   );
 }
